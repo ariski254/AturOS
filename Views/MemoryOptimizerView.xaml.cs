@@ -17,73 +17,122 @@ public partial class MemoryOptimizerView : UserControl
 
     private async void MemoryOptimizerView_Loaded(object sender, RoutedEventArgs e)
     {
-        RefreshRamMetrics();
-        await RefreshTopProcessesAsync();
-        await RefreshRamTweaksStatusAsync();
+        try
+        {
+            RefreshRamMetrics();
+            await RefreshTopProcessesAsync();
+            await RefreshRamTweaksStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Inisialisasi tampilan MemoryOptimizerView gagal: {ex.Message}");
+        }
     }
 
     private void RefreshRamMetrics()
     {
-        var metrics = _systemInfoService.GetMetrics();
-        TxtTotalRam.Text = $"{metrics.TotalRamGb} GB";
-        TxtUsedRam.Text = $"{metrics.UsedRamGb} GB ({metrics.RamUsagePercent}%)";
-        TxtFreeRam.Text = $"{metrics.FreeRamGb} GB";
+        try
+        {
+            var metrics = _systemInfoService.GetMetrics();
+            TxtTotalRam.Text = $"{metrics.TotalRamGb} GB";
+            TxtUsedRam.Text = $"{metrics.UsedRamGb} GB ({metrics.RamUsagePercent}%)";
+            TxtFreeRam.Text = $"{metrics.FreeRamGb} GB";
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Gagal memperbarui metrik RAM: {ex.Message}");
+        }
     }
 
     private async Task RefreshTopProcessesAsync()
     {
-        var top = await _memoryService.GetTopProcessesAsync(15);
-        GridTopProcesses.ItemsSource = top;
+        try
+        {
+            var top = await _memoryService.GetTopProcessesAsync(15);
+            if (IsLoaded)
+            {
+                GridTopProcesses.ItemsSource = top;
+            }
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Gagal memperbarui daftar proses: {ex.Message}");
+        }
     }
 
     private async Task RefreshRamTweaksStatusAsync()
     {
-        // 1. Paging Executive
-        bool pagingOn = _memoryService.GetDisablePagingExecutiveStatus();
-        UpdateBadge(BadgePagingExec, TxtBadgePagingExec, pagingOn ? "Aktif (Lock RAM)" : "Standar", pagingOn);
-
-        // 2. Clear Pagefile at Shutdown
-        bool clearPagefileOn = _memoryService.GetClearPageFileAtShutdownStatus();
-        UpdateBadge(BadgeClearPagefile, TxtBadgeClearPagefile, clearPagefileOn ? "Aktif" : "Nonaktif", clearPagefileOn);
-
-        // 3. Large System Cache
-        bool largeCacheOn = _memoryService.GetLargeSystemCacheStatus();
-        UpdateBadge(BadgeLargeCache, TxtBadgeLargeCache, largeCacheOn ? "Aktif" : "Default", largeCacheOn);
-
-        // 4. Memory Compression
-        var compStatus = await _memoryService.GetMemoryCompressionStatusAsync();
-        if (compStatus.HasValue)
+        try
         {
-            UpdateBadge(BadgeCompression, TxtBadgeCompression, compStatus.Value ? "Aktif" : "Nonaktif", compStatus.Value);
-        }
-        else
-        {
-            UpdateBadge(BadgeCompression, TxtBadgeCompression, "Tidak Didukung", false);
-        }
+            // 1. Paging Executive
+            bool pagingOn = _memoryService.GetDisablePagingExecutiveStatus();
+            UpdateBadge(BadgePagingExec, TxtBadgePagingExec, pagingOn ? "Aktif (Lock RAM)" : "Standar", pagingOn);
 
-        // 5. SysMain
-        bool sysMainRunning = _memoryService.GetSysMainStatus();
-        UpdateBadge(BadgeSysMain, TxtBadgeSysMain, sysMainRunning ? "Berjalan" : "Berhenti/Mati", sysMainRunning);
+            // 2. Clear Pagefile at Shutdown
+            bool clearPagefileOn = _memoryService.GetClearPageFileAtShutdownStatus();
+            UpdateBadge(BadgeClearPagefile, TxtBadgeClearPagefile, clearPagefileOn ? "Aktif" : "Nonaktif", clearPagefileOn);
+
+            // 3. Large System Cache
+            bool largeCacheOn = _memoryService.GetLargeSystemCacheStatus();
+            UpdateBadge(BadgeLargeCache, TxtBadgeLargeCache, largeCacheOn ? "Aktif" : "Default", largeCacheOn);
+
+            // 4. Memory Compression
+            var compStatus = await _memoryService.GetMemoryCompressionStatusAsync();
+            if (compStatus.HasValue)
+            {
+                UpdateBadge(BadgeCompression, TxtBadgeCompression, compStatus.Value ? "Aktif" : "Nonaktif", compStatus.Value);
+            }
+            else
+            {
+                UpdateBadge(BadgeCompression, TxtBadgeCompression, "Tidak Didukung", false);
+            }
+
+            // 5. SysMain
+            bool sysMainRunning = _memoryService.GetSysMainStatus();
+            UpdateBadge(BadgeSysMain, TxtBadgeSysMain, sysMainRunning ? "Berjalan" : "Berhenti/Mati", sysMainRunning);
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Gagal memperbarui status tweak RAM: {ex.Message}");
+        }
     }
 
     private void UpdateBadge(Border badge, TextBlock textBlock, string text, bool isPositive)
     {
-        textBlock.Text = text;
-        badge.Background = isPositive
-            ? (System.Windows.Media.Brush)FindResource("BrushSuccessLight")
-            : (System.Windows.Media.Brush)FindResource("BrushBackground");
-        textBlock.Foreground = isPositive
-            ? (System.Windows.Media.Brush)FindResource("BrushSuccess")
-            : (System.Windows.Media.Brush)FindResource("BrushTextSecondary");
+        try
+        {
+            textBlock.Text = text;
+            var bgBrush = (TryFindResource(isPositive ? "BrushSuccessLight" : "BrushBackground") as System.Windows.Media.Brush)
+                          ?? (isPositive ? System.Windows.Media.Brushes.Honeydew : System.Windows.Media.Brushes.WhiteSmoke);
+            var fgBrush = (TryFindResource(isPositive ? "BrushSuccess" : "BrushTextSecondary") as System.Windows.Media.Brush)
+                          ?? (isPositive ? System.Windows.Media.Brushes.ForestGreen : System.Windows.Media.Brushes.DimGray);
+
+            badge.Background = bgBrush;
+            textBlock.Foreground = fgBrush;
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"UpdateBadge error: {ex.Message}");
+        }
     }
 
     private async void BtnRefreshProcesses_Click(object sender, RoutedEventArgs e)
     {
         BtnRefreshProcesses.IsEnabled = false;
-        RefreshRamMetrics();
-        await RefreshTopProcessesAsync();
-        await RefreshRamTweaksStatusAsync();
-        BtnRefreshProcesses.IsEnabled = true;
+        try
+        {
+            RefreshRamMetrics();
+            await RefreshTopProcessesAsync();
+            await RefreshRamTweaksStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Gagal menyegarkan: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            BtnRefreshProcesses.IsEnabled = true;
+        }
     }
 
     private async void BtnOptimizeRam_Click(object sender, RoutedEventArgs e)
@@ -138,84 +187,180 @@ public partial class MemoryOptimizerView : UserControl
 
     private async void BtnPagingExecOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetDisablePagingExecutiveAsync(true);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetDisablePagingExecutiveAsync(true);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnPagingExecOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetDisablePagingExecutiveAsync(false);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetDisablePagingExecutiveAsync(false);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnClearPagefileOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetClearPageFileAtShutdownAsync(true);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetClearPageFileAtShutdownAsync(true);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnClearPagefileOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetClearPageFileAtShutdownAsync(false);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetClearPageFileAtShutdownAsync(false);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnLargeCacheOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetLargeSystemCacheAsync(true);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetLargeSystemCacheAsync(true);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnLargeCacheOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetLargeSystemCacheAsync(false);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetLargeSystemCacheAsync(false);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnCompressionOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetMemoryCompressionAsync(true);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetMemoryCompressionAsync(true);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnCompressionOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetMemoryCompressionAsync(false);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetMemoryCompressionAsync(false);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnSysMainOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetSysMainStatusAsync(true);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetSysMainStatusAsync(true);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
     private async void BtnSysMainOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _memoryService.SetSysMainStatusAsync(false);
-        await RefreshRamTweaksStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _memoryService.SetSysMainStatusAsync(false);
+            await RefreshRamTweaksStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
     }
 
-    private void ShowBanner(string message, bool isError)
+    private CancellationTokenSource? _bannerCts;
+
+    private async void ShowBanner(string message, bool isError)
     {
-        TxtBanner.Text = message;
-        StatusBanner.Background = isError ? (System.Windows.Media.Brush)FindResource("BrushDangerLight") : (System.Windows.Media.Brush)FindResource("BrushSuccessLight");
-        StatusBanner.BorderBrush = isError ? (System.Windows.Media.Brush)FindResource("BrushDanger") : (System.Windows.Media.Brush)FindResource("BrushSuccess");
-        StatusBanner.Visibility = Visibility.Visible;
+        try
+        {
+            _bannerCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _bannerCts = cts;
+
+            TxtBanner.Text = message;
+
+            var bgBrush = (TryFindResource(isError ? "BrushDangerLight" : "BrushSuccessLight") as System.Windows.Media.Brush)
+                          ?? (isError ? System.Windows.Media.Brushes.MistyRose : System.Windows.Media.Brushes.Honeydew);
+            var borderBrush = (TryFindResource(isError ? "BrushDanger" : "BrushSuccess") as System.Windows.Media.Brush)
+                              ?? (isError ? System.Windows.Media.Brushes.Crimson : System.Windows.Media.Brushes.ForestGreen);
+
+            StatusBanner.Background = bgBrush;
+            StatusBanner.BorderBrush = borderBrush;
+            StatusBanner.Visibility = Visibility.Visible;
+
+            await Task.Delay(isError ? 6000 : 4000, cts.Token);
+            StatusBanner.Visibility = Visibility.Collapsed;
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Banner error: {ex.Message}");
+        }
     }
 
     private void BtnCloseBanner_Click(object sender, RoutedEventArgs e)
     {
+        _bannerCts?.Cancel();
         StatusBanner.Visibility = Visibility.Collapsed;
     }
 }

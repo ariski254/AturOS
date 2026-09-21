@@ -184,16 +184,28 @@ public class MemoryOptimizerService
             var val = key?.GetValue("DisablePagingExecutive");
             return val is int i && i == 1;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Gagal membaca status DisablePagingExecutive: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<(bool Success, string Message)> SetDisablePagingExecutiveAsync(bool enable)
     {
         return await Task.Run(() =>
         {
-            if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
-            bool ok = RegistryHelper.SetDWord(Microsoft.Win32.RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", enable ? 1 : 0, backup: true);
-            return (ok, ok ? (enable ? "Kernel Windows dipaksa tetap berada di RAM fisik murni." : "Pengaturan paging kernel dikembalikan ke default.") : "Gagal mengubah setting DisablePagingExecutive.");
+            try
+            {
+                if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
+                bool ok = RegistryHelper.SetDWord(Microsoft.Win32.RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "DisablePagingExecutive", enable ? 1 : 0, backup: true);
+                return (ok, ok ? (enable ? "Kernel Windows dipaksa tetap berada di RAM fisik murni." : "Pengaturan paging kernel dikembalikan ke default.") : "Gagal mengubah setting DisablePagingExecutive.");
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Instance.Error($"Error setting DisablePagingExecutive: {ex.Message}");
+                return (false, $"Terjadi kesalahan: {ex.Message}");
+            }
         });
     }
 
@@ -205,16 +217,28 @@ public class MemoryOptimizerService
             var val = key?.GetValue("ClearPageFileAtShutdown");
             return val is int i && i == 1;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Gagal membaca status ClearPageFileAtShutdown: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<(bool Success, string Message)> SetClearPageFileAtShutdownAsync(bool enable)
     {
         return await Task.Run(() =>
         {
-            if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
-            bool ok = RegistryHelper.SetDWord(Microsoft.Win32.RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "ClearPageFileAtShutdown", enable ? 1 : 0, backup: true);
-            return (ok, ok ? (enable ? "Pembersihan pagefile saat shutdown diaktifkan." : "Pembersihan pagefile saat shutdown dinonaktifkan.") : "Gagal mengubah setting ClearPageFileAtShutdown.");
+            try
+            {
+                if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
+                bool ok = RegistryHelper.SetDWord(Microsoft.Win32.RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "ClearPageFileAtShutdown", enable ? 1 : 0, backup: true);
+                return (ok, ok ? (enable ? "Pembersihan pagefile saat shutdown diaktifkan." : "Pembersihan pagefile saat shutdown dinonaktifkan.") : "Gagal mengubah setting ClearPageFileAtShutdown.");
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Instance.Error($"Error setting ClearPageFileAtShutdown: {ex.Message}");
+                return (false, $"Terjadi kesalahan: {ex.Message}");
+            }
         });
     }
 
@@ -226,28 +250,47 @@ public class MemoryOptimizerService
             var val = key?.GetValue("LargeSystemCache");
             return val is int i && i == 1;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Gagal membaca status LargeSystemCache: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<(bool Success, string Message)> SetLargeSystemCacheAsync(bool enable)
     {
         return await Task.Run(() =>
         {
-            if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
-            bool ok = RegistryHelper.SetDWord(Microsoft.Win32.RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "LargeSystemCache", enable ? 1 : 0, backup: true);
-            return (ok, ok ? (enable ? "Ukuran Large System Cache diaktifkan untuk throughput file I/O memori." : "Ukuran cache sistem dikembalikan ke default aplikasi.") : "Gagal mengubah setting LargeSystemCache.");
+            try
+            {
+                if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
+                bool ok = RegistryHelper.SetDWord(Microsoft.Win32.RegistryHive.LocalMachine, @"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management", "LargeSystemCache", enable ? 1 : 0, backup: true);
+                return (ok, ok ? (enable ? "Ukuran Large System Cache diaktifkan untuk throughput file I/O memori." : "Ukuran cache sistem dikembalikan ke default aplikasi.") : "Gagal mengubah setting LargeSystemCache.");
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Instance.Error($"Error setting LargeSystemCache: {ex.Message}");
+                return (false, $"Terjadi kesalahan: {ex.Message}");
+            }
         });
     }
 
     public async Task<bool?> GetMemoryCompressionStatusAsync()
     {
-        var res = await ProcessHelper.RunPowerShellScriptAsync("(Get-MMAgent).MemoryCompression");
-        if (res.Success && !string.IsNullOrWhiteSpace(res.StandardOutput))
+        try
         {
-            if (bool.TryParse(res.StandardOutput.Trim(), out bool val))
+            var res = await ProcessHelper.RunPowerShellScriptAsync("(Get-MMAgent).MemoryCompression", timeoutMs: 15000);
+            if (res.Success && !string.IsNullOrWhiteSpace(res.StandardOutput))
             {
-                return val;
+                if (bool.TryParse(res.StandardOutput.Trim(), out bool val))
+                {
+                    return val;
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Gagal membaca status MemoryCompression: {ex.Message}");
         }
         return null;
     }
@@ -256,13 +299,21 @@ public class MemoryOptimizerService
     {
         if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
 
-        string cmd = enable ? "Enable-MMAgent -mc" : "Disable-MMAgent -mc";
-        var res = await ProcessHelper.RunPowerShellScriptAsync(cmd);
-        if (res.Success)
+        try
         {
-            return (true, enable ? "Kompresi Memori Windows (Memory Compression) diaktifkan." : "Kompresi Memori Windows dimatikan (menghemat beban siklus CPU).");
+            string cmd = enable ? "Enable-MMAgent -mc" : "Disable-MMAgent -mc";
+            var res = await ProcessHelper.RunPowerShellScriptAsync(cmd, timeoutMs: 20000);
+            if (res.Success)
+            {
+                return (true, enable ? "Kompresi Memori Windows (Memory Compression) diaktifkan." : "Kompresi Memori Windows dimatikan (menghemat beban siklus CPU).");
+            }
+            return (false, $"Gagal mengubah status kompresi memori: {res.StandardError}");
         }
-        return (false, $"Gagal mengubah status kompresi memori: {res.StandardError}");
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Error($"Error setting MemoryCompression: {ex.Message}");
+            return (false, $"Terjadi kesalahan: {ex.Message}");
+        }
     }
 
     public bool GetSysMainStatus()
@@ -272,24 +323,36 @@ public class MemoryOptimizerService
             using var sc = new System.ServiceProcess.ServiceController("SysMain");
             return sc.Status == System.ServiceProcess.ServiceControllerStatus.Running;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Layanan SysMain tidak dapat diakses atau tidak ditemukan: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<(bool Success, string Message)> SetSysMainStatusAsync(bool enable)
     {
         if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
 
-        if (enable)
+        try
         {
-            await ProcessHelper.RunCommandAsync("sc.exe", "config SysMain start=auto");
-            var res = await ProcessHelper.RunCommandAsync("sc.exe", "start SysMain");
-            return (res.Success, "Layanan SysMain (Superfetch) berhasil diaktifkan.");
+            if (enable)
+            {
+                await ProcessHelper.RunCommandAsync("sc.exe", "config SysMain start=auto");
+                var res = await ProcessHelper.RunCommandAsync("sc.exe", "start SysMain");
+                return (res.Success, "Layanan SysMain (Superfetch) berhasil diaktifkan.");
+            }
+            else
+            {
+                await ProcessHelper.RunCommandAsync("sc.exe", "config SysMain start=disabled");
+                var res = await ProcessHelper.RunCommandAsync("sc.exe", "stop SysMain");
+                return (res.Success, "Layanan SysMain (Superfetch) berhasil dinonaktifkan.");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await ProcessHelper.RunCommandAsync("sc.exe", "config SysMain start=disabled");
-            var res = await ProcessHelper.RunCommandAsync("sc.exe", "stop SysMain");
-            return (res.Success, "Layanan SysMain (Superfetch) berhasil dinonaktifkan.");
+            LoggerService.Instance.Error($"Error setting SysMain status: {ex.Message}");
+            return (false, $"Terjadi kesalahan pada layanan SysMain: {ex.Message}");
         }
     }
 }

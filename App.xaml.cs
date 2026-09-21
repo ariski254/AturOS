@@ -13,15 +13,24 @@ public partial class App : Application
         {
             if (args.ExceptionObject is Exception ex)
             {
-                LoggerService.Instance.Error($"Unhandled Domain Exception: {ex.Message}\n{ex.StackTrace}");
+                LoggerService.Instance.Error($"Unhandled Domain Exception: {ex.Message}\n{ex}");
             }
         };
 
         DispatcherUnhandledException += (sender, args) =>
         {
-            LoggerService.Instance.Error($"Dispatcher Exception: {args.Exception.Message}\n{args.Exception.StackTrace}");
+            var detailed = args.Exception.InnerException != null 
+                ? $"{args.Exception.Message}\nDetail: {args.Exception.InnerException.Message}"
+                : args.Exception.Message;
+
+            LoggerService.Instance.Error($"Dispatcher Exception: {detailed}\n{args.Exception}");
             args.Handled = true; // Prevent crash, handle gracefully
-            MessageBox.Show($"Terjadi kesalahan sistem:\n{args.Exception.Message}", "AturOS - Peringatan", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+            MessageBox.Show(
+                $"Terjadi kendala pada operasi sistem:\n{detailed}\n\nOperasi telah diamankan dan dicatat ke log aplikasi.",
+                "AturOS - Pemberitahuan Sistem",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         };
     }
 }

@@ -36,9 +36,12 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Path Data="{StaticResource IconInfo}" Fill="{StaticResource BrushAccent}" Width="14" Height="14" Stretch="Uniform" Margin="0,2,10,0" VerticalAlignment="Top" />
                     <TextBlock x:Name="TxtBannerMessage" Grid.Column="1" Text="Status" FontSize="13" Foreground="{StaticResource BrushTextPrimary}" TextWrapping="Wrap" />
+                    <Button Grid.Column="2" Content="✕" Background="Transparent" BorderThickness="0" Foreground="{StaticResource BrushTextSecondary}"
+                            Cursor="Hand" FontWeight="Bold" Padding="6,2" Click="BtnCloseBanner_Click" VerticalAlignment="Center" />
                 </Grid>
             </Border>
 

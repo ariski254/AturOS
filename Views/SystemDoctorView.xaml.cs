@@ -85,16 +85,37 @@ public partial class SystemDoctorView : UserControl
         });
     }
 
+    private CancellationTokenSource? _bannerCts;
+
     private void ShowBanner(string message, bool isError = false)
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.Invoke(async () =>
         {
+            _bannerCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _bannerCts = cts;
+
             TxtBannerMessage.Text = message;
             BannerStatus.Background = isError
                 ? (Brush)FindResource("BrushDangerLight")
                 : (Brush)FindResource("BrushInfoLight");
             BannerStatus.Visibility = Visibility.Visible;
+
+            try
+            {
+                await Task.Delay(isError ? 6000 : 4000, cts.Token);
+                BannerStatus.Visibility = Visibility.Collapsed;
+            }
+            catch (TaskCanceledException)
+            {
+            }
         });
+    }
+
+    private void BtnCloseBanner_Click(object sender, RoutedEventArgs e)
+    {
+        _bannerCts?.Cancel();
+        BannerStatus.Visibility = Visibility.Collapsed;
     }
 
     #region Event Handlers

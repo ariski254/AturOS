@@ -115,16 +115,32 @@ public partial class EmergencyToolsView : UserControl
         if (isLoading) TxtProgress.Text = text;
     }
 
-    private void ShowBanner(string message, bool isError)
+    private CancellationTokenSource? _bannerCts;
+
+    private async void ShowBanner(string message, bool isError)
     {
+        _bannerCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _bannerCts = cts;
+
         TxtBanner.Text = message;
         StatusBanner.Background = isError ? (System.Windows.Media.Brush)FindResource("BrushDangerLight") : (System.Windows.Media.Brush)FindResource("BrushSuccessLight");
         StatusBanner.BorderBrush = isError ? (System.Windows.Media.Brush)FindResource("BrushDanger") : (System.Windows.Media.Brush)FindResource("BrushSuccess");
         StatusBanner.Visibility = Visibility.Visible;
+
+        try
+        {
+            await Task.Delay(isError ? 6000 : 4000, cts.Token);
+            StatusBanner.Visibility = Visibility.Collapsed;
+        }
+        catch (TaskCanceledException)
+        {
+        }
     }
 
     private void BtnCloseBanner_Click(object sender, RoutedEventArgs e)
     {
+        _bannerCts?.Cancel();
         StatusBanner.Visibility = Visibility.Collapsed;
     }
 }

@@ -130,18 +130,34 @@ public partial class DashboardView : UserControl
         }
     }
 
-    private void ShowBanner(string message, bool isError)
+    private CancellationTokenSource? _bannerCts;
+
+    private async void ShowBanner(string message, bool isError)
     {
+        _bannerCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _bannerCts = cts;
+
         BannerText.Text = message;
         NotificationBanner.Background = isError ? (System.Windows.Media.Brush)FindResource("BrushDangerLight") : (System.Windows.Media.Brush)FindResource("BrushSuccessLight");
         NotificationBanner.BorderBrush = isError ? (System.Windows.Media.Brush)FindResource("BrushDanger") : (System.Windows.Media.Brush)FindResource("BrushSuccess");
         BannerIcon.Data = (System.Windows.Media.Geometry)FindResource(isError ? "IconClose" : "IconCheck");
         BannerIcon.Fill = isError ? (System.Windows.Media.Brush)FindResource("BrushDanger") : (System.Windows.Media.Brush)FindResource("BrushSuccess");
         NotificationBanner.Visibility = Visibility.Visible;
+
+        try
+        {
+            await Task.Delay(isError ? 6000 : 4000, cts.Token);
+            NotificationBanner.Visibility = Visibility.Collapsed;
+        }
+        catch (TaskCanceledException)
+        {
+        }
     }
 
     private void BtnCloseBanner_Click(object sender, RoutedEventArgs e)
     {
+        _bannerCts?.Cancel();
         NotificationBanner.Visibility = Visibility.Collapsed;
     }
 }

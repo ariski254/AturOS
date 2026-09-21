@@ -46,36 +46,53 @@ public class DnsOptimizerService
         preset.IsTesting = true;
         preset.PingMs = -1;
 
-        await Task.Run(async () =>
+        try
         {
-            try
+            long measuredPing = await Task.Run(async () =>
             {
-                using var ping = new Ping();
-                long total = 0;
-                int count = 0;
-
-                for (int i = 0; i < 3; i++)
+                try
                 {
-                    var reply = await ping.SendPingAsync(preset.PrimaryDns, 1500);
-                    if (reply.Status == IPStatus.Success)
-                    {
-                        total += reply.RoundtripTime;
-                        count++;
-                    }
-                    await Task.Delay(50);
-                }
+                    using var ping = new Ping();
+                    long total = 0;
+                    int count = 0;
 
-                preset.PingMs = count > 0 ? (total / count) : -1;
-            }
-            catch
-            {
-                preset.PingMs = -1;
-            }
-            finally
-            {
-                preset.IsTesting = false;
-            }
-        });
+                    for (int i = 0; i < 3; i++)
+                    {
+                        try
+                        {
+                            var reply = await ping.SendPingAsync(preset.PrimaryDns, 1500);
+                            if (reply.Status == IPStatus.Success)
+                            {
+                                total += reply.RoundtripTime;
+                                count++;
+                            }
+                        }
+                        catch
+                        {
+                            // Ignore single ping failure, continue next trial
+                        }
+                        await Task.Delay(50);
+                    }
+
+                    return count > 0 ? (total / count) : -1;
+                }
+                catch
+                {
+                    return -1;
+                }
+            });
+
+            preset.PingMs = measuredPing;
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Pengujian ping DNS {preset.Name} gagal: {ex.Message}");
+            preset.PingMs = -1;
+        }
+        finally
+        {
+            preset.IsTesting = false;
+        }
     }
 
     public async Task<(bool Success, string Message)> ApplyDnsAsync(string primaryDns, string secondaryDns)
@@ -85,26 +102,36 @@ public class DnsOptimizerService
             return (false, "Mengubah pengaturan DNS adapter memerlukan hak Administrator.");
         }
 
-        LoggerService.Instance.Info($"Menerapkan DNS: {primaryDns}, {secondaryDns}...");
-
-        // Find active network interfaces via PowerShell
-        var script = $@"
-            $adapters = Get-NetAdapter | Where-Object {{ $_.Status -eq 'Up' }}
-            foreach ($a in $adapters) {{
-                Set-DnsClientServerAddress -InterfaceIndex $a.ifIndex -ServerAddresses ('{primaryDns}', '{secondaryDns}')
-            }}
-            Clear-DnsClientCache
-        ";
-
-        var result = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 30000);
-
-        if (result.Success)
+        try
         {
-            LoggerService.Instance.Success($"DNS berhasil diubah ke {primaryDns} / {secondaryDns}.");
-            return (true, $"DNS adapter aktif berhasil disetel ke {primaryDns} dan cache DNS telah dibersihkan.");
-        }
+            LoggerService.Instance.Info($"Menerapkan DNS: {primaryDns}, {secondaryDns}...");
 
-        return (false, $"Gagal mengubah DNS: {result.StandardError}");
+            // Find active network interfaces via PowerShell
+            var script = $@"
+                $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object {{ $_.Status -eq 'Up' }}
+                if ($adapters) {{
+                    foreach ($a in $adapters) {{
+                        Set-DnsClientServerAddress -InterfaceIndex $a.ifIndex -ServerAddresses ('{primaryDns}', '{secondaryDns}') -ErrorAction SilentlyContinue
+                    }}
+                    Clear-DnsClientCache -ErrorAction SilentlyContinue
+                }}
+            ";
+
+            var result = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 30000);
+
+            if (result.Success)
+            {
+                LoggerService.Instance.Success($"DNS berhasil diubah ke {primaryDns} / {secondaryDns}.");
+                return (true, $"DNS adapter aktif berhasil disetel ke {primaryDns} dan cache DNS telah dibersihkan.");
+            }
+
+            return (false, $"Gagal mengubah DNS: {result.StandardError}");
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Error($"Kesalahan saat menerapkan DNS: {ex.Message}");
+            return (false, $"Terjadi kesalahan saat menerapkan DNS: {ex.Message}");
+        }
     }
 
     public async Task<(bool Success, string Message)> ResetToDhcpAsync()
@@ -114,24 +141,34 @@ public class DnsOptimizerService
             return (false, "Mengubah pengaturan DNS memerlukan hak Administrator.");
         }
 
-        LoggerService.Instance.Info("Mengembalikan DNS ke DHCP otomatis...");
-
-        var script = @"
-            $adapters = Get-NetAdapter | Where-Object { $_.Status -eq 'Up' }
-            foreach ($a in $adapters) {
-                Set-DnsClientServerAddress -InterfaceIndex $a.ifIndex -ResetServerAddresses
-            }
-            Clear-DnsClientCache
-        ";
-
-        var result = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 30000);
-
-        if (result.Success)
+        try
         {
-            LoggerService.Instance.Success("DNS berhasil dikembalikan ke DHCP otomatis.");
-            return (true, "DNS berhasil dikembalikan ke otomatis (DHCP router / ISP).");
-        }
+            LoggerService.Instance.Info("Mengembalikan DNS ke DHCP otomatis...");
 
-        return (false, $"Gagal mereset DNS: {result.StandardError}");
+            var script = @"
+                $adapters = Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Up' }
+                if ($adapters) {
+                    foreach ($a in $adapters) {
+                        Set-DnsClientServerAddress -InterfaceIndex $a.ifIndex -ResetServerAddresses -ErrorAction SilentlyContinue
+                    }
+                    Clear-DnsClientCache -ErrorAction SilentlyContinue
+                }
+            ";
+
+            var result = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 30000);
+
+            if (result.Success)
+            {
+                LoggerService.Instance.Success("DNS berhasil dikembalikan ke DHCP otomatis.");
+                return (true, "DNS berhasil dikembalikan ke otomatis (DHCP router / ISP).");
+            }
+
+            return (false, $"Gagal mereset DNS: {result.StandardError}");
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Error($"Kesalahan saat mereset DNS: {ex.Message}");
+            return (false, $"Terjadi kesalahan saat mereset DNS: {ex.Message}");
+        }
     }
 }
