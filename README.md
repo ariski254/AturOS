@@ -122,28 +122,23 @@ Berbeda dengan aplikasi utilitas berbasis web wrapper (Electron/Chromium), AturO
 
 ---
 
-## 🚀 Cara Menjalankan
+## 🚀 Cara Menggunakan (Unduh & Pakai Langsung)
 
-### Opsi 1: Menggunakan File Standalone Jadi (Rekomendasi Pengguna)
-1. Unduh file `AturOS.exe` dari tab [**Releases**](https://github.com/USERNAME/AturOS/releases).
-2. Klik ganda pada file `AturOS.exe`.
-3. Klik **Yes** pada jendela prompt Administrator (UAC).
-4. Aplikasi langsung terbuka dan siap digunakan tanpa perlu instalasi apapun.
+Aplikasi AturOS didistribusikan dalam bentuk **1 file executable mandiri (Portable Single-File .exe)** yang siap pakai. Anda **tidak perlu melakukan kompilasi / build sendiri** dan **tidak perlu menginstal .NET Runtime**.
 
-### Opsi 2: Build Mandiri dari Source Code (Developer)
-Pastikan Anda telah memasang [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
-
-```powershell
-# 1. Clone repositori ini
-git clone https://github.com/USERNAME/AturOS.git
-cd AturOS
-
-# 2. Build aplikasi menjadi 1 file tunggal (Single-File Executable)
-dotnet publish -c Release -r win-x64 --self-contained true -o ./publish
-
-# 3. Jalankan aplikasi hasil build
-.\publish\AturOS.exe
+### 1. Unduh File Aplikasi
+Kunjungi menu [**Releases**](https://github.com/ariski254/AturOS/releases) pada repositori ini, lalu unduh file:
+```text
+AturOS.exe
 ```
+
+### 2. Jalankan Aplikasi
+1. Klik ganda pada file `AturOS.exe` yang telah Anda unduh.
+2. Jika muncul jendela konfirmasi hak akses Administrator (UAC), klik **Yes** (*diperlukan agar AturOS dapat melakukan optimasi sistem, perbaikan berkas SFC/DISM, dan penyesuaian registri secara native*).
+3. Aplikasi AturOS langsung terbuka dan siap digunakan seketika!
+
+> [!TIP]
+> **100% Portabel:** Anda dapat memindahkan atau menyimpan file `AturOS.exe` di mana pun (Desktop, Flashdisk, atau drive penyimpanan) tanpa memerlukan instalasi ataupun folder berkas pendukung lainnya.
 
 ---
 
