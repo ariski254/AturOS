@@ -1,0 +1,263 @@
+<UserControl x:Class="AturOS.Views.StorageCleanerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="850">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="32,24,32,32">
+        <StackPanel>
+            <!-- Header -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Pembersih Drive" Style="{StaticResource PageTitleStyle}" />
+                    <TextBlock Text="Pindai dan bersihkan file sementara yang aman dihapus, atur kompresi CompactOS, serta kelola file hibernasi sistem."
+                               Style="{StaticResource PageSubtitleStyle}" />
+                </StackPanel>
+
+                <!-- Actions: Scan & Clean Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnScan" Style="{StaticResource SecondaryButton}" Height="36" Margin="0,0,10,0" Click="BtnScan_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconRefresh}" Fill="{StaticResource BrushTextPrimary}" Width="13" Height="13" Stretch="Uniform" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Pindai File" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="BtnClean" Style="{StaticResource DangerButton}" Height="36" Click="BtnClean_Click" IsEnabled="False">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconCleaner}" Fill="White" Width="13" Height="13" Stretch="Uniform" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Bersihkan Sekarang" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Status Banner -->
+            <Border x:Name="StatusBanner" Background="{StaticResource BrushSuccessLight}" BorderBrush="{StaticResource BrushSuccess}"
+                    BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,20" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TxtBanner" Foreground="{StaticResource BrushTextPrimary}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <Button Grid.Column="1" Content="✕" Background="Transparent" BorderThickness="0" Foreground="{StaticResource BrushTextSecondary}"
+                            Cursor="Hand" FontWeight="Bold" Padding="6,2" Click="BtnCloseBanner_Click" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <!-- Loading / Progress Indicator -->
+            <Border x:Name="ProgressCard" Style="{StaticResource CardStyle}" Margin="0,0,0,20" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock x:Name="TxtProgressDesc" Text="Sedang memproses..." FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource BrushTextPrimary}" Margin="0,0,0,8" />
+                    <ProgressBar IsIndeterminate="True" Style="{StaticResource ModernProgressBar}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Storage Cleaner Items Section -->
+            <TextBlock Text="Target Pembersihan File Sementara" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,12" />
+
+            <Border Style="{StaticResource CardStyle}" Padding="0" Margin="0,0,0,24">
+                <ItemsControl x:Name="ListCleanerTargets">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="{StaticResource BrushBorder}" BorderThickness="0,0,0,1" Padding="20,16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- CheckBox -->
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,16,0" Style="{StaticResource ModernCheckBox}" />
+
+                                    <!-- Details -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                                        <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" />
+                                        <TextBlock Text="{Binding Path}" FontSize="11" Foreground="{StaticResource BrushTextMuted}" FontFamily="Consolas" Margin="0,2,0,0" />
+                                    </StackPanel>
+
+                                    <!-- File Count & Status -->
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="24,0" HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding Status}" FontSize="12" Foreground="{StaticResource BrushTextSecondary}" HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding FileCount, StringFormat='{}{0} file'}" FontSize="11" Foreground="{StaticResource BrushTextMuted}" HorizontalAlignment="Right" Margin="0,2,0,0" />
+                                    </StackPanel>
+
+                                    <!-- Size Badge -->
+                                    <Border Grid.Column="3" Background="{StaticResource BrushAccentLight}" CornerRadius="6" Padding="12,6" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding FormattedSize}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource BrushAccent}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!-- Advanced Storage Tools: CompactOS & Hibernation -->
+            <TextBlock Text="Optimasi Penyimpanan Sistem Windows" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,12" />
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- CompactOS Card -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock Text="CompactOS" Style="{StaticResource CardTitleStyle}" />
+                            <Border HorizontalAlignment="Right" Background="{StaticResource BrushBackground}" CornerRadius="6" Padding="8,3">
+                                <TextBlock x:Name="TxtCompactStatus" Text="Memeriksa..." FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Text="Kompresi biner Windows bawaan untuk menghemat ~1.5-3 GB ruang C:."
+                                   FontSize="12" Foreground="{StaticResource BrushTextSecondary}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnCompactEnable" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" FontSize="12" Margin="0,0,8,0" Click="BtnCompactEnable_Click">
+                                <TextBlock Text="Aktifkan" />
+                            </Button>
+                            <Button x:Name="BtnCompactDisable" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" FontSize="12" Click="BtnCompactDisable_Click">
+                                <TextBlock Text="Matikan" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Hibernation Card -->
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock Text="Hibernasi (hiberfil)" Style="{StaticResource CardTitleStyle}" />
+                            <Border HorizontalAlignment="Right" Background="{StaticResource BrushBackground}" CornerRadius="6" Padding="8,3">
+                                <TextBlock x:Name="TxtHibernateStatus" Text="Memeriksa..." FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Text="Membebaskan ruang penyimpanan C: sebesar kapasitas RAM jika dimatikan."
+                                   FontSize="12" Foreground="{StaticResource BrushTextSecondary}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnHibernateOn" Style="{StaticResource SecondaryButton}" Height="32" Padding="14,0" FontSize="12" Margin="0,0,8,0" Click="BtnHibernateOn_Click">
+                                <TextBlock Text="ON" />
+                            </Button>
+                            <Button x:Name="BtnHibernateOff" Style="{StaticResource DangerButton}" Height="32" Padding="14,0" FontSize="12" Click="BtnHibernateOff_Click">
+                                <TextBlock Text="OFF" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- WinSxS DISM Cleanup Card -->
+                <Border Grid.Column="4" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock Text="Pembersih WinSxS" Style="{StaticResource CardTitleStyle}" />
+                            <Border HorizontalAlignment="Right" Background="{StaticResource BrushSuccessLight}" CornerRadius="6" Padding="8,3">
+                                <TextBlock Text="DISM" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource BrushSuccess}" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Text="Hapus cadangan versi komponen Windows lama yang sudah diperbarui."
+                                   FontSize="12" Foreground="{StaticResource BrushTextSecondary}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                        <Button x:Name="BtnDismCleanup" Style="{StaticResource SecondaryButton}" Height="32" Padding="14,0" FontSize="12" Click="BtnDismCleanup_Click">
+                            <TextBlock Text="Bersihkan WinSxS" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Row 2 of Storage Tweaks -->
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Storage Sense Card -->
+                <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock Text="Storage Sense" Style="{StaticResource CardTitleStyle}" />
+                            <Border HorizontalAlignment="Right" Background="{StaticResource BrushBackground}" CornerRadius="6" Padding="8,3">
+                                <TextBlock x:Name="TxtStorageSenseStatus" Text="Memeriksa..." FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Text="Penyimpanan Pintar Windows: otomatis bersihkan file sementara saat disk C: menipis."
+                                   FontSize="12" Foreground="{StaticResource BrushTextSecondary}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnStorageSenseOn" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" FontSize="12" Margin="0,0,8,0" Click="BtnStorageSenseOn_Click">
+                                <TextBlock Text="Aktifkan" />
+                            </Button>
+                            <Button x:Name="BtnStorageSenseOff" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" FontSize="12" Click="BtnStorageSenseOff_Click">
+                                <TextBlock Text="Matikan" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- NTFS Last Access Time Card -->
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock Text="NTFS Last Access" Style="{StaticResource CardTitleStyle}" />
+                            <Border HorizontalAlignment="Right" Background="{StaticResource BrushBackground}" CornerRadius="6" Padding="8,3">
+                                <TextBlock x:Name="TxtNtfsAccessStatus" Text="Memeriksa..." FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Text="Matikan pencatatan waktu akses setiap file dibuka untuk menghemat I/O dan memperpanjang umur SSD."
+                                   FontSize="12" Foreground="{StaticResource BrushTextSecondary}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnNtfsAccessDisable" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" FontSize="12" Margin="0,0,8,0" Click="BtnNtfsAccessDisable_Click">
+                                <TextBlock Text="Matikan (Hemat SSD)" />
+                            </Button>
+                            <Button x:Name="BtnNtfsAccessEnable" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" FontSize="12" Click="BtnNtfsAccessEnable_Click">
+                                <TextBlock Text="Default" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Reserved Storage Card -->
+                <Border Grid.Column="4" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <TextBlock Text="Reserved Storage (~7 GB)" Style="{StaticResource CardTitleStyle}" />
+                            <Border HorizontalAlignment="Right" Background="{StaticResource BrushBackground}" CornerRadius="6" Padding="8,3">
+                                <TextBlock x:Name="TxtReservedStorageStatus" Text="Memeriksa..." FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Text="Cadangan ~7 GB ruang disk C: oleh Windows Update. Matikan untuk membebaskan ruang disk instan."
+                                   FontSize="12" Foreground="{StaticResource BrushTextSecondary}" TextWrapping="Wrap" Margin="0,0,0,16" />
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnReservedStorageOff" Style="{StaticResource DangerButton}" Height="32" Padding="12,0" FontSize="12" Margin="0,0,8,0" Click="BtnReservedStorageOff_Click">
+                                <TextBlock Text="Bebaskan 7 GB" />
+                            </Button>
+                            <Button x:Name="BtnReservedStorageOn" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" FontSize="12" Click="BtnReservedStorageOn_Click">
+                                <TextBlock Text="Aktifkan" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

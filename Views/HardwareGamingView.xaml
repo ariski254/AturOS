@@ -1,0 +1,340 @@
+<UserControl x:Class="AturOS.Views.HardwareGamingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="950" d:DesignWidth="850">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="32,24,32,32">
+        <StackPanel>
+            <!-- Header -->
+            <Grid Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Tuning Hardware &amp; Gaming" Style="{StaticResource PageTitleStyle}" />
+                    <TextBlock Text="Optimasi tingkat rendah untuk latensi prosesor, grafis GPU, memori kernel, input mouse/keyboard, dan jaringan gaming."
+                               Style="{StaticResource PageSubtitleStyle}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Status Banner -->
+            <Border x:Name="StatusBanner" Background="{StaticResource BrushSuccessLight}" BorderBrush="{StaticResource BrushSuccess}"
+                    BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,20" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TxtBanner" Foreground="{StaticResource BrushTextPrimary}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <Button Grid.Column="1" Content="✕" Background="Transparent" BorderThickness="0" Foreground="{StaticResource BrushTextSecondary}"
+                            Cursor="Hand" FontWeight="Bold" Padding="6,2" Click="BtnCloseBanner_Click" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <!-- Section 1: GPU & Shader Cache -->
+            <TextBlock Text="GPU, Grafis &amp; Game DVR" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,12" />
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,24">
+                <StackPanel>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Pembersih Shader Cache (DirectX / NVIDIA / AMD / Intel)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Hapus file cache shader lama yang korup atau membengkak untuk mengatasi stuttering saat bermain game." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Height="34" Content="Bersihkan Shader Cache" Click="BtnCleanShader_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Hardware-Accelerated GPU Scheduling (HAGS)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Mungkinkan GPU mengelola alokasi VRAM secara mandiri untuk memangkas latensi render frame." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Aktifkan (ON)" Margin="0,0,8,0" Click="BtnHagsOn_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Nonaktifkan" Click="BtnHagsOff_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Nonaktifkan Xbox Game DVR &amp; Optimasi TdrDelay" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Matikan perekaman gameplay latar belakang yang membebani FPS dan setel TdrDelay 10 detik agar driver GPU tidak timeout." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Terapkan Tweak GPU" Click="BtnTweakGpu_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Prioritas Penjadwalan GPU untuk Game" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Alokasikan prioritas rendering GPU dan thread scheduler multimedia ke tingkat High khusus proses game." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Prioritas Maksimum" Margin="0,0,8,0" Click="BtnGpuPriorityOn_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default" Click="BtnGpuPriorityOff_Click" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Section 2: CPU & Latensi Sistem -->
+            <TextBlock Text="CPU, Timer &amp; Manajemen Daya" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,12" />
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,24">
+                <StackPanel>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Skema Daya Kinerja Maksimal (Ultimate Performance)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Aktifkan skema daya tersembunyi Windows yang menghilangkan micro-latency dan mencegah CPU masuk mode hemat saat bekerja." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource PrimaryButton}" Height="34" Content="Aktifkan Ultimate" Margin="0,0,8,0" Click="BtnPowerUltimate_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Balanced" Click="BtnPowerBalanced_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Prioritas Penjadwalan CPU Aplikasi Aktif (Win32PrioritySeparation)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Berikan jatah siklus quantum CPU terbesar kepada jendela program atau game yang sedang aktif di depan." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Prioritas Depan (38)" Margin="0,0,8,0" Click="BtnCpuPriorityOn_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default (2)" Click="BtnCpuPriorityOff_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Nonaktifkan CPU Core Parking" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Paksa seluruh core CPU tetap aktif 100% tanpa masuk mode tidur saat bermain game kompetitif." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Matikan Core Parking" Click="BtnDisableCoreParking_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Nonaktifkan Dynamic Tick (bcdedit)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Jaga konsistensi timer clock interval Windows untuk mengurangi micro-stuttering pada aplikasi 3D." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Matikan Dynamic Tick" Click="BtnDisableDynamicTick_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Nonaktifkan Power Throttling Layar Depan" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Cegah Windows menurunkan frekuensi clock pada proses game atau software aktif." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Matikan Throttling" Click="BtnDisableThrottling_Click" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Section 3: RAM & Memori Kernel -->
+            <TextBlock Text="RAM Fisik &amp; Paging Kernel" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,12" />
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                        <TextBlock Text="Disable Paging Executive" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                        <TextBlock Text="Paksa seluruh modul kernel dan driver sistem operasi tetap berada di RAM fisik murni tanpa dialihkan ke pagefile disk." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Aktifkan (Lock RAM)" Margin="0,0,8,0" Click="BtnPagingExecOn_Click" />
+                        <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Standar (Pagefile)" Click="BtnPagingExecOff_Click" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Section 4: Disk, TCP No Delay & Jaringan -->
+            <TextBlock Text="Disk, SSD TRIM &amp; Latensi Jaringan" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,12" />
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,24">
+                <StackPanel>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="TCP No Delay (Matikan Nagle's Algorithm)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Kirim paket data jaringan seketika tanpa delay batching untuk memangkas ping online gaming." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Aktifkan TCP No Delay" Click="BtnTcpNoDelay_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Nonaktifkan Network Throttling Index" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Hapus pembatasan packet throttling Windows multimedia untuk throughput throughput bandwidth jaringan 100% penuh." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Bebaskan Limit" Margin="0,0,8,0" Click="BtnNetworkThrottlingOff_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default" Click="BtnNetworkThrottlingOn_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Verifikasi &amp; Aktifkan SSD TRIM" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Pastikan perintah TRIM aktif agar SSD tidak mengalami penurunan kecepatan tulis seiring waktu." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Aktifkan SSD TRIM" Click="BtnEnableTrim_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Nonaktifkan NTFS 8.3 Name Creation" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Hentikan pembuatan nama alias 8.3 jadul untuk mempercepat pencarian direktori folder game besar." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Matikan NTFS 8.3" Click="BtnDisableNtfs83_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="1-Klik Flush &amp; Reset DNS Cache" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Bersihkan cache resolver DNS untuk mengatasi masalah koneksi game atau web macet." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Flush DNS Sekarang" Click="BtnFlushDns_Click" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Section 5: Input & Responsivitas -->
+            <TextBlock Text="Input Mouse, Keyboard &amp; Responsivitas UI" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,12" />
+            <Border Style="{StaticResource CardStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Respon Menu &amp; UI Instan (MenuShowDelay = 0)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Hilangkan jeda 400ms saat membuka menu konteks klik-kanan dan sub-menu untuk navigasi desktop super cepat." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Instan (0 ms)" Margin="0,0,8,0" Click="BtnMenuDelayZero_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default (400 ms)" Click="BtnMenuDelayDefault_Click" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Nonaktifkan Akselerasi Mouse (Akurasi 1:1)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Hilangkan kurva percepatan mouse bawaan Windows agar jarak pergerakan kursor 100% konsisten." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Matikan Akselerasi" Click="BtnDisableMouseAccel_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Maksimalkan Repeat-Rate Keyboard" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Perpendek delay input ketikan tombol untuk pergerakan responsif maksimal di game." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Setel Maksimum" Click="BtnMaxKeyboard_Click" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Matikan Pop-up Dialog Sticky Keys" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Mencegah dialog peringatan Sticky Keys muncul saat tombol Shift ditekan berulang kali secara cepat." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Matikan Sticky Keys" Click="BtnDisableStickyKeys_Click" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

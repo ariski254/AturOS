@@ -1,0 +1,103 @@
+<UserControl x:Class="AturOS.Views.NetworkDnsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="850">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="32,24,32,32">
+        <StackPanel>
+            <!-- Header -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Pengoptimal Jaringan &amp; DNS" Style="{StaticResource PageTitleStyle}" />
+                    <TextBlock Text="Ganti server DNS adapter jaringan secara instan ke penyedia tercepat atau pemblokir iklan, dan uji latensi ping secara real-time."
+                               Style="{StaticResource PageSubtitleStyle}" />
+                </StackPanel>
+
+                <!-- Benchmark All & Reset DHCP -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnBenchmarkAll" Style="{StaticResource PrimaryButton}" Height="36" Margin="0,0,10,0" Click="BtnBenchmarkAll_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Path Data="{StaticResource IconNetwork}" Fill="White" Width="13" Height="13" Stretch="Uniform" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Uji Latensi Semua" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SecondaryButton}" Height="36" Click="BtnResetDhcp_Click">
+                        <TextBlock Text="Kembalikan ke DHCP (Otomatis)" VerticalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Status Banner -->
+            <Border x:Name="StatusBanner" Background="{StaticResource BrushSuccessLight}" BorderBrush="{StaticResource BrushSuccess}"
+                    BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,20" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TxtBanner" Foreground="{StaticResource BrushTextPrimary}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    <Button Grid.Column="1" Content="✕" Background="Transparent" BorderThickness="0" Foreground="{StaticResource BrushTextSecondary}"
+                            Cursor="Hand" FontWeight="Bold" Padding="6,2" Click="BtnCloseBanner_Click" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <!-- DNS Presets List -->
+            <Border Style="{StaticResource CardStyle}" Padding="0">
+                <ItemsControl x:Name="ListDnsPresets">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="{StaticResource BrushBorder}" BorderThickness="0,0,0,1" Padding="20,18">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="130" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Details -->
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                                            <Border Background="{StaticResource BrushBackground}" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock FontSize="11" FontFamily="Consolas" Foreground="{StaticResource BrushTextSecondary}">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0} / {1}">
+                                                            <Binding Path="PrimaryDns" />
+                                                            <Binding Path="SecondaryDns" />
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                                    </StackPanel>
+
+                                    <!-- Latency Badge -->
+                                    <Border Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                            Background="{StaticResource BrushBackground}" CornerRadius="6" Padding="12,6">
+                                        <TextBlock Text="{Binding PingDisplay}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource BrushAccent}" />
+                                    </Border>
+
+                                    <!-- Action Buttons -->
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="Uji Ping" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" FontSize="12" Margin="0,0,8,0"
+                                                Click="BtnTestSingle_Click" Tag="{Binding}" />
+                                        <Button Content="Gunakan DNS Ini" Style="{StaticResource PrimaryButton}" Height="34" Padding="14,0" FontSize="12"
+                                                Click="BtnApplyPreset_Click" Tag="{Binding}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

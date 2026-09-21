@@ -1,0 +1,130 @@
+using System.Windows;
+using System.Windows.Controls;
+using AturOS.Services;
+
+namespace AturOS.Views;
+
+public partial class EmergencyToolsView : UserControl
+{
+    private readonly EmergencyToolsService _emergencyService = new();
+
+    public EmergencyToolsView()
+    {
+        InitializeComponent();
+    }
+
+    private async void BtnKillFrozen_Click(object sender, RoutedEventArgs e)
+    {
+        var (s, m) = await _emergencyService.KillNotRespondingTasksAsync();
+        ShowBanner(m, isError: !s);
+    }
+
+    private async void BtnRestartExplorer_Click(object sender, RoutedEventArgs e)
+    {
+        var ok = await _emergencyService.RestartExplorerAsync();
+        ShowBanner(ok ? "Windows Explorer berhasil direstart." : "Gagal merestart Windows Explorer.", isError: !ok);
+    }
+
+    private async void BtnClearClipboard_Click(object sender, RoutedEventArgs e)
+    {
+        var ok = await _emergencyService.ClearClipboardAsync();
+        ShowBanner(ok ? "Riwayat clipboard sistem telah dikosongkan." : "Gagal mengosongkan clipboard.", isError: !ok);
+    }
+
+    private async void BtnBatteryReport_Click(object sender, RoutedEventArgs e)
+    {
+        var (s, p) = await _emergencyService.GenerateBatteryReportAsync();
+        ShowBanner(s ? $"Laporan baterai berhasil dibuka di browser: {p}" : p, isError: !s);
+    }
+
+    private async void BtnSaveLidAction_Click(object sender, RoutedEventArgs e)
+    {
+        var tag = (ComboLidAction.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "0";
+        int.TryParse(tag, out int val);
+        var (s, m) = await _emergencyService.SetLidCloseActionAsync((LidCloseAction)val);
+        ShowBanner(m, isError: !s);
+    }
+
+    private async void BtnSafeModeOn_Click(object sender, RoutedEventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            "Setel komputer untuk masuk ke Safe Mode pada restart berikutnya?",
+            "Konfirmasi Safe Mode",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirm != MessageBoxResult.Yes) return;
+
+        var (s, m) = await _emergencyService.SetSafeModeBootAsync(true);
+        ShowBanner(m, isError: !s);
+    }
+
+    private async void BtnSafeModeOff_Click(object sender, RoutedEventArgs e)
+    {
+        var (s, m) = await _emergencyService.SetSafeModeBootAsync(false);
+        ShowBanner(m, isError: !s);
+    }
+
+    private async void BtnRunSfc_Click(object sender, RoutedEventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            "Mulai pemindaian file sistem (sfc /scannow)?\n\nOperasi ini membutuhkan hak Administrator dan dapat memakan waktu 5-10 menit.",
+            "Konfirmasi SFC Scannow",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (confirm != MessageBoxResult.Yes) return;
+
+        SetLoading(true, "Menjalankan SFC Scannow (mohon tunggu)...");
+        try
+        {
+            var (s, m) = await _emergencyService.RunSfcScannowAsync(p => Dispatcher.Invoke(() => TxtProgress.Text = p));
+            ShowBanner(m, isError: !s);
+        }
+        finally
+        {
+            SetLoading(false);
+        }
+    }
+
+    private async void BtnRunDism_Click(object sender, RoutedEventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            "Mulai pemulihan citra sistem (DISM RestoreHealth)?\n\nOperasi ini membutuhkan hak Administrator dan koneksi internet stabil.",
+            "Konfirmasi DISM RestoreHealth",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (confirm != MessageBoxResult.Yes) return;
+
+        SetLoading(true, "Menjalankan DISM RestoreHealth (mohon tunggu)...");
+        try
+        {
+            var (s, m) = await _emergencyService.RunDismRestoreHealthAsync(p => Dispatcher.Invoke(() => TxtProgress.Text = p));
+            ShowBanner(m, isError: !s);
+        }
+        finally
+        {
+            SetLoading(false);
+        }
+    }
+
+    private void SetLoading(bool isLoading, string text = "")
+    {
+        ProgressCard.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+        if (isLoading) TxtProgress.Text = text;
+    }
+
+    private void ShowBanner(string message, bool isError)
+    {
+        TxtBanner.Text = message;
+        StatusBanner.Background = isError ? (System.Windows.Media.Brush)FindResource("BrushDangerLight") : (System.Windows.Media.Brush)FindResource("BrushSuccessLight");
+        StatusBanner.BorderBrush = isError ? (System.Windows.Media.Brush)FindResource("BrushDanger") : (System.Windows.Media.Brush)FindResource("BrushSuccess");
+        StatusBanner.Visibility = Visibility.Visible;
+    }
+
+    private void BtnCloseBanner_Click(object sender, RoutedEventArgs e)
+    {
+        StatusBanner.Visibility = Visibility.Collapsed;
+    }
+}
