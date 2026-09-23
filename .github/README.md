@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ariski254/AturOS/releases"><img src="https://img.shields.io/badge/Release-v1.0.0--Stable-2563EB?style=for-the-badge&logo=github" alt="Release" /></a>
+  <a href="https://github.com/ariski254/AturOS/releases"><img src="https://img.shields.io/badge/Release-v2.0.0--Stable-2563EB?style=for-the-badge&logo=github" alt="Release" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4?style=for-the-badge&logo=windows" alt="Platform Windows" />
   <img src="https://img.shields.io/badge/Architecture-x64-0F172A?style=for-the-badge" alt="Architecture x64" />
   <img src="https://img.shields.io/badge/Framework-.NET%208%20WPF-512BD4?style=for-the-badge&logo=dotnet" alt=".NET 8 WPF" />
