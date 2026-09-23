@@ -75,13 +75,6 @@ Setiap profil dilengkapi tombol **"Kembalikan ke Standar"** untuk restore ke kon
 
 Menampilkan dan menghapus seluruh aplikasi yang terpasang — baik aplikasi **Win32 desktop** maupun **UWP/Microsoft Store** — dengan penanganan khusus untuk aplikasi terproteksi sistem:
 
-| Aplikasi | Mekanisme Penanganan |
-|---|---|
-| Microsoft Edge | Membuka kunci registri NoRemove, menjalankan uninstaller resmi, mengunci registry agar tidak diunduh ulang |
-| Microsoft OneDrive | Menghentikan proses, menjalankan uninstaller bawaan, membersihkan autostart, menghapus pintasan Explorer |
-| Aplikasi "Diproteksi Windows" | Mencabut paket Provisioning sistem, melucuti background activity dan scheduled tasks |
-| UWP Bawaan Lainnya | Dihapus via Remove-AppxPackage atau Remove-AppxProvisionedPackage |
-
 Fitur pencarian dan filter kategori tersedia untuk menemukan aplikasi dengan cepat.
 
 ---
