@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using AturOS.Services;
 
@@ -26,11 +27,15 @@ public partial class App : Application
             LoggerService.Instance.Error($"Dispatcher Exception: {detailed}\n{args.Exception}");
             args.Handled = true; // Prevent crash, handle gracefully
 
-            MessageBox.Show(
-                $"Terjadi kendala pada operasi sistem:\n{detailed}\n\nOperasi telah diamankan dan dicatat ke log aplikasi.",
-                "AturOS - Pemberitahuan Sistem",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            // Suppress non-critical framework/telemetry/MSAA/popup exceptions so they don't interrupt user navigation
+            if (args.Exception is System.IO.FileNotFoundException fnf &&
+                (fnf.FileName?.Contains("Accessibility", StringComparison.OrdinalIgnoreCase) == true ||
+                 fnf.FileName?.Contains("Tracing", StringComparison.OrdinalIgnoreCase) == true ||
+                 fnf.FileName?.Contains("PresentationFramework", StringComparison.OrdinalIgnoreCase) == true))
+            {
+                return;
+            }
         };
     }
 }
+

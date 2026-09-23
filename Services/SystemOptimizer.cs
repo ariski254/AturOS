@@ -49,7 +49,7 @@ public class SystemOptimizer
 
     public async Task<MemoryTrimReport> OptimizeWorkingSetAsync(Action<string>? progress = null)
     {
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             var report = new MemoryTrimReport();
 
@@ -93,7 +93,7 @@ public class SystemOptimizer
             }
 
             // Short pause for OS memory manager commit
-            Thread.Sleep(300);
+            await Task.Delay(300);
 
             if (NativeMethods.TryGetMemoryStatus(out var memAfter))
             {

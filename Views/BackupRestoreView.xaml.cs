@@ -9,6 +9,8 @@ public partial class BackupRestoreView : UserControl
 {
     private readonly RestorePointService _restoreService = new();
     private readonly RegistryBackupService _registryBackupService = new();
+    private bool _hasLoadedPointsOnce = false;
+    private bool _isLoadingPoints = false;
 
     public BackupRestoreView()
     {
@@ -20,8 +22,9 @@ public partial class BackupRestoreView : UserControl
 
     private async void BackupRestoreView_Loaded(object sender, RoutedEventArgs e)
     {
-        await RefreshPointsListAsync();
         RefreshRegistryBackupsList();
+        if (_hasLoadedPointsOnce || _isLoadingPoints) return;
+        await RefreshPointsListAsync();
     }
 
     private void RefreshRegistryBackupsList()
@@ -40,19 +43,31 @@ public partial class BackupRestoreView : UserControl
 
     private async Task RefreshPointsListAsync()
     {
+        if (_isLoadingPoints) return;
+        _isLoadingPoints = true;
+
         bool isAdmin = AdministratorHelper.IsAdministrator;
         AdminNoticeCard.Visibility = isAdmin ? Visibility.Collapsed : Visibility.Visible;
 
         try
         {
             var points = await _restoreService.GetRestorePointsAsync();
+            if (!IsLoaded) return;
             GridRestorePoints.ItemsSource = points;
             TxtEmptyRestorePoints.Visibility = (points == null || points.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
+            _hasLoadedPointsOnce = true;
         }
         catch (Exception ex)
         {
             LoggerService.Instance.Warning($"Gagal memuat restore points: {ex.Message}");
-            TxtEmptyRestorePoints.Visibility = Visibility.Visible;
+            if (IsLoaded)
+            {
+                TxtEmptyRestorePoints.Visibility = Visibility.Visible;
+            }
+        }
+        finally
+        {
+            _isLoadingPoints = false;
         }
     }
 
@@ -92,19 +107,43 @@ public partial class BackupRestoreView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
-        ShowBanner($"Memulai pemulihan sistem ke Titik #{point.SequenceNumber}... Mohon jangan matikan komputer.", isError: false);
-        var (success, msg) = await _restoreService.RestoreToSequenceAsync(point.SequenceNumber);
-        ShowBanner(msg, isError: !success);
+        btn.IsEnabled = false;
+        try
+        {
+            ShowBanner($"Memulai pemulihan sistem ke Titik #{point.SequenceNumber}... Mohon jangan matikan komputer.", isError: false);
+            var (success, msg) = await _restoreService.RestoreToSequenceAsync(point.SequenceNumber);
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Gagal memulihkan sistem: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+        }
     }
 
     private async void BtnBackupRegistry_Click(object sender, RoutedEventArgs e)
     {
-        var key = (ComboRegistryKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "HKEY_CURRENT_USER\\Software\\Policies";
-        var (success, path) = await _registryBackupService.BackupKeyAsync(key, "AturOS_Backup");
-        ShowBanner(success ? $"Cadangan registri berhasil diekspor ke: {path}" : $"Gagal mengekspor registri: {path}", isError: !success);
-        if (success)
+        if (sender is Button btn) btn.IsEnabled = false;
+        try
         {
-            RefreshRegistryBackupsList();
+            var key = (ComboRegistryKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "HKEY_CURRENT_USER\\Software\\Policies";
+            var (success, path) = await _registryBackupService.BackupKeyAsync(key, "AturOS_Backup");
+            ShowBanner(success ? $"Cadangan registri berhasil diekspor ke: {path}" : $"Gagal mengekspor registri: {path}", isError: !success);
+            if (success)
+            {
+                RefreshRegistryBackupsList();
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Gagal mencadangkan registri: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            if (sender is Button b) b.IsEnabled = true;
         }
     }
 
@@ -125,8 +164,20 @@ public partial class BackupRestoreView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
-        var (success, msg) = await _registryBackupService.RestoreBackupAsync(item.FullPath);
-        ShowBanner(msg, isError: !success);
+        btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _registryBackupService.RestoreBackupAsync(item.FullPath);
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Gagal memulihkan registri: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+        }
     }
 
     private void BtnOpenNotepad_Click(object sender, RoutedEventArgs e)

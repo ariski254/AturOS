@@ -1,5 +1,7 @@
+using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using AturOS.Helpers;
 
@@ -70,7 +72,10 @@ public class EmergencyToolsService
             {
                 Process.Start(new ProcessStartInfo { FileName = outPath, UseShellExecute = true });
             }
-            catch { }
+            catch (Exception ex)
+            {
+                LoggerService.Instance.Warning($"Gagal membuka browser default untuk laporan baterai: {ex.Message}");
+            }
             return (true, outPath);
         }
 
@@ -119,7 +124,7 @@ public class EmergencyToolsService
         LoggerService.Instance.Info("Menjalankan sfc /scannow...");
         onProgress?.Invoke("Menjalankan pemeriksaan integritas file sistem (sfc /scannow)...");
 
-        var result = await ProcessHelper.RunCommandAsync("sfc.exe", "/scannow", timeoutMs: 600000); // 10 min
+        var result = await ProcessHelper.RunCommandAsync("sfc.exe", "/scannow", timeoutMs: 900000); // 15 min
         return (result.Success, result.Success ? "Pemeriksaan SFC selesai. File sistem Windows telah diverifikasi." : $"Hasil SFC: {result.StandardOutput}");
     }
 
@@ -132,5 +137,62 @@ public class EmergencyToolsService
 
         var result = await ProcessHelper.RunCommandAsync("dism.exe", "/online /cleanup-image /restorehealth", timeoutMs: 900000); // 15 min
         return (result.Success, result.Success ? "Pemulihan citra sistem DISM berhasil diselesaikan." : $"DISM gagal: {result.StandardError}");
+    }
+
+    public async Task<int> GetGhostDeviceCountAsync()
+    {
+        string psScript = @"
+$classes = @('USB', 'DiskDrive', 'Ports', 'Bluetooth', 'WPD', 'Mouse', 'Keyboard', 'MEDIA', 'HIDClass', 'Net')
+$count = (Get-PnpDevice | Where-Object { -not $_.Present -and $classes -contains $_.Class }).Count
+Write-Output ""GHOST_COUNT:$count""
+";
+        var result = await ProcessHelper.RunPowerShellScriptAsync(psScript, timeoutMs: 30000);
+        if (result.Success)
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(result.StandardOutput, @"GHOST_COUNT:(\d+)");
+            if (match.Success && int.TryParse(match.Groups[1].Value, out int count))
+            {
+                return count;
+            }
+        }
+        return 0;
+    }
+
+    public async Task<(bool Success, string Message, int CleanedCount)> CleanGhostDevicesAsync(Action<string>? onProgress = null)
+    {
+        if (!AdministratorHelper.IsAdministrator)
+            return (false, "Membersihkan Ghost Devices memerlukan hak Administrator.", 0);
+
+        LoggerService.Instance.Info("Memulai pemindaian dan pembersihan ghost devices (driver perangkat terputus)...");
+        onProgress?.Invoke("Memindai dan membersihkan perangkat terputus (phantom/ghost devices)...");
+
+        string psScript = @"
+$classes = @('USB', 'DiskDrive', 'Ports', 'Bluetooth', 'WPD', 'Mouse', 'Keyboard', 'MEDIA', 'HIDClass', 'Net')
+$devices = Get-PnpDevice | Where-Object { -not $_.Present -and $classes -contains $_.Class }
+$count = 0
+foreach ($d in $devices) {
+    if ($d.InstanceId) {
+        & pnputil.exe /remove-device ""$($d.InstanceId)"" | Out-Null
+        $count++
+    }
+}
+Write-Output ""CLEANED_COUNT:$count""
+";
+        var result = await ProcessHelper.RunPowerShellScriptAsync(psScript, timeoutMs: 120000);
+        if (!result.Success && string.IsNullOrEmpty(result.StandardOutput))
+        {
+            LoggerService.Instance.Error($"Gagal membersihkan ghost devices: {result.StandardError}");
+            return (false, $"Gagal membersihkan ghost devices: {result.StandardError}", 0);
+        }
+
+        int cleanedCount = 0;
+        var match = System.Text.RegularExpressions.Regex.Match(result.StandardOutput, @"CLEANED_COUNT:(\d+)");
+        if (match.Success)
+        {
+            int.TryParse(match.Groups[1].Value, out cleanedCount);
+        }
+
+        LoggerService.Instance.Success($"Pembersihan ghost devices selesai. {cleanedCount} perangkat lama/hantu dibersihkan.");
+        return (true, $"Berhasil membersihkan {cleanedCount} driver perangkat terputus (ghost devices).", cleanedCount);
     }
 }

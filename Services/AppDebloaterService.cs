@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using AturOS.Helpers;
 using AturOS.Models;
@@ -37,8 +36,6 @@ public class AppDebloaterService
         ["Microsoft.XboxGamingOverlay"] = ("Xbox Game Bar", "Overlay perekaman gameplay dan widget gaming Windows.", "Gaming & Hiburan", true, "ms-windows-store://pdp/?ProductId=9NZKPSTSNW4P"),
         ["Microsoft.XboxApp"] = ("Xbox App", "Aplikasi manajemen game dan langganan PC Game Pass.", "Gaming & Hiburan", true, "ms-windows-store://pdp/?ProductId=9MV0B5HZVK9Z"),
         ["Microsoft.XboxIdentityProvider"] = ("Xbox Identity Provider", "Layanan otentikasi profil Xbox Live.", "Gaming & Hiburan", true, "ms-windows-store://pdp/?ProductId=9WZDNCRD1HKW"),
-        ["Microsoft.XboxSpeechToTextOverlay"] = ("Xbox Speech To Text", "Overlay transkripsi suara obrolan Xbox.", "Gaming & Hiburan", true, ""),
-        ["Microsoft.XboxGameCallableUI"] = ("Xbox Game Callable UI", "Antarmuka pemanggil sosial dan undangan Xbox.", "Gaming & Hiburan", true, ""),
         ["SpotifyAB.SpotifyMusic"] = ("Spotify", "Aplikasi streaming musik Spotify.", "Gaming & Hiburan", true, "ms-windows-store://pdp/?ProductId=9NCBCSZSJRSB"),
         ["Clipchamp.Clipchamp"] = ("Clipchamp Video Editor", "Aplikasi editor video cloud dari Microsoft.", "Gaming & Hiburan", true, "ms-windows-store://pdp/?ProductId=9P1J8S7CCWWT"),
         ["Microsoft.ZuneVideo"] = ("Media Player (Film & TV)", "Pemutar video standar Film & TV Windows.", "Gaming & Hiburan", true, "ms-windows-store://pdp/?ProductId=9WZDNCRFJ3P2"),
@@ -172,9 +169,14 @@ public class AppDebloaterService
 
                         bool isSystemApp = isSystemComponent || isMicrosoftSystem;
 
-                        // Categorize Win32 App
+                        // Categorize Win32 App & Classify
+                        var classification = ClassifyApp(displayName, publisher, subKeyName, isSystemApp, !isSystemComponent);
                         string category;
-                        if (isSystemApp)
+                        if (classification == AppClassification.OemBloat)
+                        {
+                            category = "OEM Bloatware";
+                        }
+                        else if (isSystemApp)
                         {
                             category = "Aplikasi Sistem Windows";
                         }
@@ -201,11 +203,12 @@ public class AppDebloaterService
                             Description = !string.IsNullOrWhiteSpace(publisher) ? $"{publisher} • v{displayVersion}" : $"Aplikasi desktop Win32 • v{displayVersion}",
                             Category = category,
                             AppType = AppInstallType.Win32,
+                            Classification = classification,
                             IsSystemApp = isSystemApp,
                             UninstallString = uninstallString,
                             QuietUninstallString = quietUninstallString,
                             InstallLocation = installLocation,
-                            IsSafeToRemove = !isSystemComponent,
+                            IsSafeToRemove = !isSystemComponent && classification != AppClassification.Essential && classification != AppClassification.Security && classification != AppClassification.Driver,
                             IsInstalled = true
                         });
                     }
@@ -227,11 +230,11 @@ public class AppDebloaterService
 
         try
         {
-            // Ambil seluruh paket UWP (baik aplikasi pengguna maupun aplikasi sistem yang terpasang)
+            // Ambil seluruh paket UWP yang terpasang menggunakan CSV (100% andal, tanpa ketergantungan JSON / Type mismatch)
             var script = @"
                 Get-AppxPackage | Where-Object { 
-                    -not $_.IsFramework 
-                } | Select-Object Name, PackageFullName, Version, Publisher, InstallLocation, NonRemovable, SignatureKind | ConvertTo-Json -Compress
+                    -not $_.IsFramework
+                } | Select-Object Name, PackageFullName, Version, Publisher, InstallLocation, SignatureKind, NonRemovable | ConvertTo-Csv -NoTypeInformation
             ";
 
             var result = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 35000);
@@ -240,22 +243,15 @@ public class AppDebloaterService
                 return list;
             }
 
-            string json = result.StandardOutput.Trim();
-            using var doc = JsonDocument.Parse(json);
+            var lines = result.StandardOutput.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                var fields = ProcessHelper.ParseCsvLine(line);
+                if (fields.Count < 6) continue;
+                if (fields[0].Equals("Name", StringComparison.OrdinalIgnoreCase)) continue; // skip header CSV
 
-            var elements = new List<JsonElement>();
-            if (doc.RootElement.ValueKind == JsonValueKind.Array)
-            {
-                elements.AddRange(doc.RootElement.EnumerateArray());
-            }
-            else if (doc.RootElement.ValueKind == JsonValueKind.Object)
-            {
-                elements.Add(doc.RootElement);
-            }
-
-            foreach (var elem in elements)
-            {
-                string name = elem.TryGetProperty("Name", out var n) ? n.GetString() ?? "" : "";
+                string name = fields[0].Trim();
                 if (string.IsNullOrWhiteSpace(name)) continue;
 
                 // Abaikan paket host internal OS esensial (seperti Settings, Start Menu, Windows Security) agar OS tidak rusak
@@ -270,12 +266,24 @@ public class AppDebloaterService
                     continue;
                 }
 
-                string packageFullName = elem.TryGetProperty("PackageFullName", out var pfn) ? pfn.GetString() ?? name : name;
-                string version = elem.TryGetProperty("Version", out var v) ? v.GetString() ?? "" : "";
-                string publisher = elem.TryGetProperty("Publisher", out var pub) ? pub.GetString() ?? "" : "";
-                string installLoc = elem.TryGetProperty("InstallLocation", out var loc) ? loc.GetString() ?? "" : "";
-                bool nonRemovable = elem.TryGetProperty("NonRemovable", out var nr) && nr.GetBoolean();
-                string sigKind = elem.TryGetProperty("SignatureKind", out var sk) ? sk.GetString() ?? "" : "";
+                string packageFullName = string.IsNullOrWhiteSpace(fields[1]) ? name : fields[1].Trim();
+                string version = fields[2].Trim();
+                string publisher = fields[3].Trim();
+                string installLoc = fields[4].Trim();
+                string sigKind = fields[5].Trim();
+                bool isNonRemovable = fields.Count > 6 && bool.TryParse(fields[6].Trim(), out var nr) && nr;
+
+                // Abaikan infrastruktur shell internal Windows di SystemApps (selalu diproteksi kernel Windows dan tidak dapat dicopot)
+                if (installLoc.IndexOf(@"\Windows\SystemApps\", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
+                // Abaikan jika berjenis System dan ditandai NonRemovable oleh Windows
+                if (isNonRemovable && sigKind.Equals("System", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
                 // Parse human publisher from CN string
                 if (publisher.StartsWith("CN=", StringComparison.OrdinalIgnoreCase))
@@ -285,7 +293,9 @@ public class AppDebloaterService
                 }
 
                 string displayName = name;
-                string description = "Paket aplikasi modern Windows (UWP).";
+                string description = isNonRemovable 
+                    ? "Paket aplikasi modern Windows (terproteksi sistem)."
+                    : "Paket aplikasi modern Windows (UWP).";
                 string category = "Aplikasi Modern (UWP / Store)";
                 bool safeToRemove = true;
                 string storeUrl = $"ms-windows-store://search/?query={Uri.EscapeDataString(name)}";
@@ -295,7 +305,7 @@ public class AppDebloaterService
                                   name.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase) ||
                                   name.StartsWith("windows.", StringComparison.OrdinalIgnoreCase) ||
                                   sigKind.Equals("System", StringComparison.OrdinalIgnoreCase) ||
-                                  nonRemovable;
+                                  isNonRemovable;
 
                 if (KnownUwpApps.TryGetValue(name, out var known))
                 {
@@ -325,6 +335,12 @@ public class AppDebloaterService
                     }
                 }
 
+                var uwpClassification = ClassifyApp(displayName, publisher, name, isSystemApp, safeToRemove);
+                if (uwpClassification == AppClassification.OemBloat)
+                {
+                    category = "OEM Bloatware";
+                }
+
                 list.Add(new DebloatAppItem
                 {
                     PackageName = name,
@@ -334,9 +350,11 @@ public class AppDebloaterService
                     Description = description,
                     Category = category,
                     AppType = AppInstallType.Uwp,
+                    Classification = uwpClassification,
                     IsSystemApp = isSystemApp,
+                    IsNonRemovable = isNonRemovable,
                     InstallLocation = installLoc,
-                    IsSafeToRemove = safeToRemove,
+                    IsSafeToRemove = safeToRemove && uwpClassification != AppClassification.Essential && uwpClassification != AppClassification.Security,
                     StoreUrl = storeUrl,
                     IsInstalled = true
                 });
@@ -359,148 +377,313 @@ public class AppDebloaterService
                 return;
             }
 
+            var localApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            var progFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
             var sysDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
             var sysWow64 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "SysWOW64");
-            var localApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-            string? setupExe = null;
-            if (File.Exists(Path.Combine(sysWow64, "OneDriveSetup.exe")))
+            // 1. Periksa keberadaan file executable aktif OneDrive
+            string? activeExe = null;
+            if (File.Exists(Path.Combine(localApp, @"Microsoft\OneDrive\OneDrive.exe")))
             {
-                setupExe = Path.Combine(sysWow64, "OneDriveSetup.exe");
+                activeExe = Path.Combine(localApp, @"Microsoft\OneDrive\OneDrive.exe");
+            }
+            else if (File.Exists(Path.Combine(progFiles, @"Microsoft OneDrive\OneDrive.exe")))
+            {
+                activeExe = Path.Combine(progFiles, @"Microsoft OneDrive\OneDrive.exe");
+            }
+            else if (File.Exists(Path.Combine(progFilesX86, @"Microsoft OneDrive\OneDrive.exe")))
+            {
+                activeExe = Path.Combine(progFilesX86, @"Microsoft OneDrive\OneDrive.exe");
+            }
+
+            // 2. Periksa apakah ada registrasi Registry Uninstall aktif untuk OneDrive
+            bool hasRegistryEntry = false;
+            string? registryUninstallCmd = null;
+            try
+            {
+                using var uKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\OneDriveSetup.exe");
+                if (uKey != null)
+                {
+                    hasRegistryEntry = true;
+                    registryUninstallCmd = uKey.GetValue("UninstallString")?.ToString();
+                }
+            }
+            catch { }
+
+            if (!hasRegistryEntry)
+            {
+                try
+                {
+                    using var mKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft OneDrive");
+                    if (mKey != null)
+                    {
+                        hasRegistryEntry = true;
+                        registryUninstallCmd = mKey.GetValue("UninstallString")?.ToString();
+                    }
+                }
+                catch { }
+            }
+
+            // PENTING: Jika file eksekusi aktif tidak ada DAN tidak ada entri registry uninstall,
+            // maka OneDrive SUDAH TERHAPUS/TIDAK TERPASANG.
+            // JANGAN PERNAH menganggap terinstall hanya karena System32\OneDriveSetup.exe atau SysWOW64\OneDriveSetup.exe ada,
+            // karena file-file tersebut adalah berkas cetakan setup bawaan OS Windows yang tidak pernah dihapus Microsoft.
+            if (activeExe == null && !hasRegistryEntry)
+            {
+                return;
+            }
+
+            // Tentukan perintah uninstaller yang valid
+            string uninstCmd = "";
+            if (!string.IsNullOrWhiteSpace(registryUninstallCmd))
+            {
+                uninstCmd = registryUninstallCmd;
+            }
+            else if (File.Exists(Path.Combine(localApp, @"Microsoft\OneDrive\OneDriveSetup.exe")))
+            {
+                uninstCmd = $"\"{Path.Combine(localApp, @"Microsoft\OneDrive\OneDriveSetup.exe")}\" /uninstall";
+            }
+            else if (File.Exists(Path.Combine(sysWow64, "OneDriveSetup.exe")))
+            {
+                uninstCmd = $"\"{Path.Combine(sysWow64, "OneDriveSetup.exe")}\" /uninstall";
             }
             else if (File.Exists(Path.Combine(sysDir, "OneDriveSetup.exe")))
             {
-                setupExe = Path.Combine(sysDir, "OneDriveSetup.exe");
+                uninstCmd = $"\"{Path.Combine(sysDir, "OneDriveSetup.exe")}\" /uninstall";
             }
-            else if (File.Exists(Path.Combine(localApp, @"Microsoft\OneDrive\OneDrive.exe")))
+            else if (!string.IsNullOrEmpty(activeExe))
             {
-                setupExe = Path.Combine(localApp, @"Microsoft\OneDrive\OneDrive.exe");
+                uninstCmd = $"\"{activeExe}\" /uninstall";
             }
 
-            if (!string.IsNullOrEmpty(setupExe))
+            list.Add(new DebloatAppItem
             {
-                list.Add(new DebloatAppItem
-                {
-                    PackageName = "Microsoft.OneDrive",
-                    DisplayName = "Microsoft OneDrive",
-                    Publisher = "Microsoft Corporation",
-                    Version = "Built-in",
-                    Description = "Layanan penyimpanan awan Microsoft OneDrive bawaan Windows.",
-                    Category = "Aplikasi Sistem Windows",
-                    AppType = AppInstallType.Win32,
-                    IsSystemApp = true,
-                    UninstallString = $"\"{setupExe}\" /uninstall",
-                    QuietUninstallString = $"\"{setupExe}\" /uninstall",
-                    InstallLocation = Path.GetDirectoryName(setupExe) ?? "",
-                    IsSafeToRemove = true,
-                    IsInstalled = true
-                });
-            }
+                PackageName = "Microsoft.OneDrive",
+                DisplayName = "Microsoft OneDrive",
+                Publisher = "Microsoft Corporation",
+                Version = "Terpasang",
+                Description = "Layanan penyimpanan awan Microsoft OneDrive bawaan Windows.",
+                Category = "Aplikasi Sistem Windows",
+                AppType = AppInstallType.Win32,
+                Classification = AppClassification.RecommendedRemove,
+                IsSystemApp = true,
+                UninstallString = uninstCmd,
+                QuietUninstallString = uninstCmd.Contains("/silent") ? uninstCmd : $"{uninstCmd} /silent",
+                InstallLocation = activeExe != null ? Path.GetDirectoryName(activeExe) ?? "" : "",
+                IsSafeToRemove = true,
+                IsInstalled = true
+            });
         }
         catch { }
     }
 
-    public async Task<(bool Success, string Message)> UninstallAppAsync(DebloatAppItem app)
+    /// <summary>
+    /// Mesin Klasifikasi Aplikasi terpusat sesuai Bab 18 & 61 FITUR.md
+    /// </summary>
+    public static AppClassification ClassifyApp(string displayName, string publisher, string packageName, bool isSystemApp, bool isSafeToRemove)
+    {
+        string combined = $"{displayName} {publisher} {packageName}".ToLowerInvariant();
+
+        // 1. Keamanan Windows & Inti Sistem (Wajib dijaga)
+        if (EssentialCoreSystemPackages.Contains(packageName) ||
+            combined.Contains("sechealthui") ||
+            combined.Contains("windows defender") ||
+            combined.Contains("windows security") ||
+            combined.Contains("smartscreen"))
+        {
+            return AppClassification.Security;
+        }
+
+        // 2. Driver & Utilitas Hardware (Touchpad, Audio, GPU, Hotkey)
+        if (combined.Contains("realtek") ||
+            combined.Contains("synaptics") ||
+            combined.Contains("elan trackpad") ||
+            combined.Contains("nvidia graphics") ||
+            combined.Contains("amd radeon") ||
+            combined.Contains("intel graphics") ||
+            combined.Contains("audio driver") ||
+            combined.Contains("touchpad") ||
+            combined.Contains("hotkey service"))
+        {
+            return AppClassification.Driver;
+        }
+
+        // 3. Dependensi Sistem (Visual C++, .NET, WebView2, DirectX)
+        if (combined.Contains("visual c++") ||
+            combined.Contains("microsoft .net") ||
+            combined.Contains("webview2") ||
+            combined.Contains("directx"))
+        {
+            return AppClassification.Dependency;
+        }
+
+        // 4. OEM Bloatware (Bab 61: Dell, HP, Lenovo, ASUS, Acer, MSI trialware / telemetry / promo)
+        if (combined.Contains("supportassist") ||
+            combined.Contains("hp support assistant") ||
+            combined.Contains("hp smart") ||
+            combined.Contains("lenovo vantage") ||
+            combined.Contains("lenovo welcome") ||
+            combined.Contains("myasus") ||
+            combined.Contains("armoury crate") ||
+            combined.Contains("acer care center") ||
+            combined.Contains("mcafee") ||
+            combined.Contains("norton") ||
+            combined.Contains("wildtangent") ||
+            combined.Contains("booking.com") ||
+            combined.Contains("candy crush") ||
+            combined.Contains("tiktok") ||
+            combined.Contains("march of empires") ||
+            combined.Contains("hidden city") ||
+            combined.Contains("caesars slots"))
+        {
+            return AppClassification.OemBloat;
+        }
+
+        // 5. Rekomendasi Copot (Consumer Bloatware & Telemetry bawaan)
+        if (combined.Contains("bingnews") ||
+            combined.Contains("bingweather") ||
+            combined.Contains("solitaire") ||
+            combined.Contains("clipchamp") ||
+            combined.Contains("mixed reality") ||
+            combined.Contains("feedback hub") ||
+            combined.Contains("get help") ||
+            combined.Contains("get started") ||
+            combined.Contains("your phone") ||
+            combined.Contains("phonelink") ||
+            combined.Contains("onedrive") ||
+            combined.Contains("skype") ||
+            combined.Contains("3d viewer") ||
+            combined.Contains("print 3d"))
+        {
+            return AppClassification.RecommendedRemove;
+        }
+
+        // 6. Aplikasi Pengguna (Third-Party yang diinstall user secara sadar)
+        if (!isSystemApp && (combined.Contains("google chrome") ||
+                             combined.Contains("mozilla firefox") ||
+                             combined.Contains("visual studio") ||
+                             combined.Contains("code") ||
+                             combined.Contains("discord") ||
+                             combined.Contains("telegram") ||
+                             combined.Contains("steam") ||
+                             combined.Contains("vlc") ||
+                             combined.Contains("git") ||
+                             combined.Contains("whatsapp")))
+        {
+            return AppClassification.UserApp;
+        }
+
+        if (isSystemApp)
+        {
+            return isSafeToRemove ? AppClassification.Optional : AppClassification.System;
+        }
+
+        return AppClassification.UserApp;
+    }
+
+    public async Task<(bool Success, string Message)> UninstallAppAsync(DebloatAppItem app, Action<string>? onProgress = null)
     {
         LoggerService.Instance.Info($"Mencopot aplikasi: {app.DisplayName} ({app.AppTypeDisplay}, {app.OriginBadgeText})...");
         app.IsProcessing = true;
 
         try
         {
-            if (app.AppType == AppInstallType.Uwp)
+            // 1. Khusus Microsoft Edge Browser (baik stub UWP maupun installer Win32)
+            if ((app.DisplayName.Equals("Microsoft Edge", StringComparison.OrdinalIgnoreCase) || 
+                 app.PackageName.Contains("MicrosoftEdge", StringComparison.OrdinalIgnoreCase)) &&
+                !app.DisplayName.Contains("WebView", StringComparison.OrdinalIgnoreCase))
             {
-                // Script pencopotan UWP mendalam (User & Provisioned Package)
-                var script = $@"
-$pkg = Get-AppxPackage -Name '{app.PackageName}'
-if ($pkg) {{
-    $pkg | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
-    $pkg | Remove-AppxPackage -ErrorAction SilentlyContinue
-}}
-$prov = Get-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue | Where-Object {{ $_.DisplayName -eq '{app.PackageName}' -or $_.PackageName -like '*{app.PackageName}*' }}
-if ($prov) {{
-    foreach ($p in $prov) {{
-        Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction SilentlyContinue | Out-Null
-    }}
-}}
-$rem = Get-AppxPackage -Name '{app.PackageName}'
-if ($rem) {{
-    throw ""Aplikasi masih terpasang pada profil pengguna tertentu atau sistem terlindungi.""
-}}
-";
-                var result = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 45000);
-
-                if (result.Success)
+                var (edgeSuccess, edgeMsg) = await WindowsLiteService.RemoveMicrosoftEdgeAsync();
+                if (edgeSuccess)
                 {
                     app.IsInstalled = false;
-                    LoggerService.Instance.Success($"Aplikasi {app.DisplayName} berhasil didebloat/dicopot.");
-                    return (true, $"Aplikasi '{app.DisplayName}' berhasil didebloat dan dicopot dari sistem.");
+                    return (true, edgeMsg);
                 }
-
-                var error = !string.IsNullOrWhiteSpace(result.StandardError) ? result.StandardError : result.StandardOutput;
-                LoggerService.Instance.Error($"Gagal mencopot UWP {app.DisplayName}: {error}");
-                return (false, $"Gagal mencopot: {error}");
+                return (false, edgeMsg);
             }
-            else
+
+            // 2. Khusus Microsoft OneDrive
+            if (app.DisplayName.Contains("OneDrive", StringComparison.OrdinalIgnoreCase) ||
+                app.PackageName.Contains("OneDrive", StringComparison.OrdinalIgnoreCase))
             {
-                // Win32 Uninstaller
-                if (app.DisplayName.Contains("OneDrive", StringComparison.OrdinalIgnoreCase))
+                var (oneDriveSuccess, oneDriveMsg) = await WindowsLiteService.RemoveOneDriveAsync();
+                if (oneDriveSuccess)
                 {
-                    // Khusus OneDrive: Hentikan proses jika sedang aktif terlebih dahulu
-                    try
-                    {
-                        foreach (var p in Process.GetProcessesByName("OneDrive"))
-                        {
-                            p.Kill();
-                        }
-                    }
-                    catch { }
-                }
-
-                string uninstCmd = !string.IsNullOrWhiteSpace(app.UninstallString)
-                    ? app.UninstallString
-                    : app.QuietUninstallString;
-
-                if (string.IsNullOrWhiteSpace(uninstCmd))
-                {
-                    return (false, "Perintah uninstaller tidak ditemukan pada registry aplikasi ini.");
-                }
-
-                var (fileName, arguments) = ParseCommandLine(uninstCmd);
-
-                // If msiexec, convert /I to /X for uninstallation
-                if (fileName.Contains("msiexec", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (arguments.Contains("/I", StringComparison.OrdinalIgnoreCase))
-                    {
-                        arguments = arguments.Replace("/I", "/X", StringComparison.OrdinalIgnoreCase);
-                    }
-                }
-
-                LoggerService.Instance.Info($"Menjalankan uninstaller: {fileName} {arguments}");
-
-                var psi = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = arguments,
-                    UseShellExecute = true
-                };
-
-                var proc = Process.Start(psi);
-                if (proc != null)
-                {
-                    await proc.WaitForExitAsync();
                     app.IsInstalled = false;
-                    LoggerService.Instance.Success($"Uninstaller '{app.DisplayName}' selesai dijalankan.");
-                    return (true, $"Proses pencopotan '{app.DisplayName}' telah selesai dijalankan.");
+                    return (true, oneDriveMsg);
                 }
-
-                return (false, "Gagal memulai proses uninstaller.");
+                return (false, oneDriveMsg);
             }
+
+            // 3. Eksekusi Permanent Uninstall Engine (Discovery -> Stop Processes -> Stop/Remove Services -> Remove Tasks -> Remove Startup -> Uninstaller -> Residual Cleanup -> Verification)
+            var result = await PermanentUninstallEngine.UninstallPermanentlyAsync(app, onProgress);
+            if (result.Success || result.Status == UninstallVerificationStatus.PartialRemoval)
+            {
+                app.IsInstalled = false;
+                return (true, result.Message);
+            }
+
+            return (false, result.Message);
         }
         catch (Exception ex)
         {
             LoggerService.Instance.Error($"Gagal mencopot {app.DisplayName}: {ex.Message}");
             return (false, $"Error saat uninstall: {ex.Message}");
+        }
+        finally
+        {
+            app.IsProcessing = false;
+        }
+    }
+
+    public async Task<(bool Success, string Message)> ForceUninstallAppAsync(DebloatAppItem app, Action<string>? onProgress = null)
+    {
+        LoggerService.Instance.Warning($"[FORCE UNINSTALL] Memulai prosedur paksa copot: {app.DisplayName} ({app.AppTypeDisplay}, {app.OriginBadgeText})...");
+        app.IsProcessing = true;
+
+        try
+        {
+            // 1. Khusus Microsoft Edge Browser
+            if ((app.DisplayName.Equals("Microsoft Edge", StringComparison.OrdinalIgnoreCase) || 
+                 app.PackageName.Contains("MicrosoftEdge", StringComparison.OrdinalIgnoreCase)) &&
+                !app.DisplayName.Contains("WebView", StringComparison.OrdinalIgnoreCase))
+            {
+                var (edgeSuccess, edgeMsg) = await WindowsLiteService.RemoveMicrosoftEdgeAsync();
+                if (edgeSuccess)
+                {
+                    app.IsInstalled = false;
+                    return (true, edgeMsg);
+                }
+            }
+
+            // 2. Khusus Microsoft OneDrive
+            if (app.DisplayName.Contains("OneDrive", StringComparison.OrdinalIgnoreCase) ||
+                app.PackageName.Contains("OneDrive", StringComparison.OrdinalIgnoreCase))
+            {
+                var (oneDriveSuccess, oneDriveMsg) = await WindowsLiteService.RemoveOneDriveAsync();
+                if (oneDriveSuccess)
+                {
+                    app.IsInstalled = false;
+                    return (true, oneDriveMsg);
+                }
+            }
+
+            // 3. Eksekusi Force Uninstall Engine (Bypass broken uninstaller, aggressive process/service/task/takeown/registry purge)
+            var result = await PermanentUninstallEngine.ForceUninstallPermanentlyAsync(app, onProgress);
+            if (result.Success || result.Status == UninstallVerificationStatus.PartialRemoval)
+            {
+                app.IsInstalled = false;
+                return (true, result.Message);
+            }
+
+            return (false, result.Message);
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Error($"Gagal paksa copot {app.DisplayName}: {ex.Message}");
+            return (false, $"Error saat paksa uninstall: {ex.Message}");
         }
         finally
         {

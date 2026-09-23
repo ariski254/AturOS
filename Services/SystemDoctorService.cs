@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 using AturOS.Helpers;
 using AturOS.Models;
@@ -23,7 +22,8 @@ public class SystemDoctorService
 
         try
         {
-            var sfcResult = await ProcessHelper.RunProcessAsync("sfc.exe", "/scannow");
+            // SFC pemindaian penuh membutuhkan batas waktu hingga 15 menit
+            var sfcResult = await ProcessHelper.RunProcessAsync("sfc.exe", "/scannow", timeoutMs: 900000);
             string sfcOutput = sfcResult.StandardOutput;
 
             if (sfcResult.ExitCode == 0 || sfcOutput.Contains("did not find any integrity violations", StringComparison.OrdinalIgnoreCase))
@@ -40,7 +40,7 @@ public class SystemDoctorService
 
             // Kerusakan terdeteksi yang gagal diperbaiki oleh SFC -> Otomatis eksekusi DISM RestoreHealth
             progress?.Invoke("SFC mendeteksi kerusakan yang belum selesai. Menjalankan DISM /Online /Cleanup-Image /RestoreHealth...");
-            var dismResult = await ProcessHelper.RunProcessAsync("dism.exe", "/Online /Cleanup-Image /RestoreHealth");
+            var dismResult = await ProcessHelper.RunProcessAsync("dism.exe", "/Online /Cleanup-Image /RestoreHealth", timeoutMs: 900000);
 
             bool dismSuccess = dismResult.ExitCode == 0 ||
                                dismResult.StandardOutput.Contains("The restore operation completed successfully", StringComparison.OrdinalIgnoreCase);
@@ -104,7 +104,7 @@ public class SystemDoctorService
         try
         {
             progress?.Invoke("Mereset folder antrian SoftwareDistribution dan Catroot2...");
-            var result = await ProcessHelper.RunPowerShellScriptAsync(script);
+            var result = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 60000);
 
             progress?.Invoke("Menghidupkan kembali layanan Windows Update...");
             return (true, "Antrian Windows Update berhasil direset dan layanan sistem telah direstart.");
@@ -125,17 +125,17 @@ public class SystemDoctorService
         try
         {
             progress?.Invoke("Mereset katalog Winsock...");
-            await ProcessHelper.RunProcessAsync("netsh.exe", "winsock reset");
+            await ProcessHelper.RunProcessAsync("netsh.exe", "winsock reset", timeoutMs: 15000);
 
             progress?.Invoke("Mereset tumpukan TCP/IP...");
-            await ProcessHelper.RunProcessAsync("netsh.exe", "int ip reset");
+            await ProcessHelper.RunProcessAsync("netsh.exe", "int ip reset", timeoutMs: 15000);
 
             progress?.Invoke("Membersihkan cache DNS (flushdns)...");
-            await ProcessHelper.RunProcessAsync("ipconfig.exe", "/flushdns");
+            await ProcessHelper.RunProcessAsync("ipconfig.exe", "/flushdns", timeoutMs: 15000);
 
             progress?.Invoke("Memperbarui koneksi IP (release & renew)...");
-            await ProcessHelper.RunProcessAsync("ipconfig.exe", "/release");
-            await ProcessHelper.RunProcessAsync("ipconfig.exe", "/renew");
+            await ProcessHelper.RunProcessAsync("ipconfig.exe", "/release", timeoutMs: 15000);
+            await ProcessHelper.RunProcessAsync("ipconfig.exe", "/renew", timeoutMs: 25000);
 
             progress?.Invoke("Reset tumpukan jaringan selesai.");
             return (true, "Katalog Winsock, TCP/IP stack, dan cache DNS berhasil direset. Silakan restart komputer jika diperlukan.");
@@ -244,7 +244,11 @@ public class SystemDoctorService
         progress?.Invoke($"Mengunduh dan memasang paket {wingetId} via Winget...");
         try
         {
-            var res = await ProcessHelper.RunProcessAsync("winget.exe", $"install --id {wingetId} -e --silent --accept-source-agreements --accept-package-agreements");
+            var res = await ProcessHelper.RunProcessAsync(
+                "winget.exe",
+                $"install --id {wingetId} -e --silent --accept-source-agreements --accept-package-agreements",
+                timeoutMs: 300000); // 5 menit untuk download & instalasi
+
             if (res.ExitCode == 0)
             {
                 progress?.Invoke($"Paket {wingetId} berhasil dipasang.");
@@ -302,22 +306,29 @@ public class SystemDoctorService
                         } catch {}
                     }
                 }
-                $results | ConvertTo-Json -Compress
+                $results | Select-Object FileName, FilePath, BrokenTarget | ConvertTo-Csv -NoTypeInformation
             ";
 
             try
             {
-                var run = await ProcessHelper.RunPowerShellScriptAsync(script);
-                string json = run.StandardOutput.Trim();
-                if (!string.IsNullOrEmpty(json) && json.StartsWith("["))
+                var run = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 60000);
+                if (!string.IsNullOrWhiteSpace(run.StandardOutput))
                 {
-                    var parsed = JsonSerializer.Deserialize<List<BrokenShortcutItem>>(json);
-                    if (parsed != null) items.AddRange(parsed);
-                }
-                else if (!string.IsNullOrEmpty(json) && json.StartsWith("{"))
-                {
-                    var single = JsonSerializer.Deserialize<BrokenShortcutItem>(json);
-                    if (single != null) items.Add(single);
+                    var lines = run.StandardOutput.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var line in lines)
+                    {
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+                        var fields = ProcessHelper.ParseCsvLine(line);
+                        if (fields.Count < 3) continue;
+                        if (fields[0].Equals("FileName", StringComparison.OrdinalIgnoreCase)) continue;
+
+                        items.Add(new BrokenShortcutItem
+                        {
+                            FileName = fields[0],
+                            FilePath = fields[1],
+                            BrokenTarget = fields[2]
+                        });
+                    }
                 }
             }
             catch (Exception ex)
@@ -377,14 +388,12 @@ public class SystemDoctorService
 
                     foreach (var subName in root.GetSubKeyNames())
                     {
-                        // Lewatkan system GUIDs jika perlu, cek apakah ada DisplayName
                         using var sub = root.OpenSubKey(subName);
                         if (sub == null) continue;
 
                         string? displayName = sub.GetValue("DisplayName")?.ToString();
                         if (string.IsNullOrWhiteSpace(displayName)) continue;
 
-                        // Periksa InstallLocation
                         string? installLoc = sub.GetValue("InstallLocation")?.ToString();
                         string? displayIcon = sub.GetValue("DisplayIcon")?.ToString();
 
@@ -487,7 +496,7 @@ public class SystemDoctorService
                 }
 
                 // Query dirty bit via fsutil
-                var dirtyQuery = await ProcessHelper.RunProcessAsync("fsutil.exe", "dirty query C:");
+                var dirtyQuery = await ProcessHelper.RunProcessAsync("fsutil.exe", "dirty query C:", timeoutMs: 15000);
                 if (dirtyQuery.StandardOutput.Contains("is dirty", StringComparison.OrdinalIgnoreCase))
                 {
                     report.IsDirty = true;
@@ -511,14 +520,14 @@ public class SystemDoctorService
         try
         {
             // Jadwalkan chkdsk C: /f /r dengan menyetel dirty bit atau via fsutil
-            var res = await ProcessHelper.RunProcessAsync("fsutil.exe", $"dirty set {drive}");
+            var res = await ProcessHelper.RunProcessAsync("fsutil.exe", $"dirty set {drive}", timeoutMs: 15000);
             if (res.ExitCode == 0 || res.StandardOutput.Contains("Volume - C: is now marked dirty", StringComparison.OrdinalIgnoreCase))
             {
                 return (true, $"Pemeriksaan integritas disk ({drive}) dijadwalkan secara otomatis pada saat komputer dinyalakan kembali (reboot).");
             }
 
             // Fallback via chkdsk script
-            var chkRes = await ProcessHelper.RunPowerShellScriptAsync($"echo y | chkdsk.exe {drive} /f /r");
+            var chkRes = await ProcessHelper.RunPowerShellScriptAsync($"echo y | chkdsk.exe {drive} /f /r", timeoutMs: 30000);
             return (true, $"Pemeriksaan disk {drive} dijadwalkan saat restart Windows berikutnya.");
         }
         catch (Exception ex)

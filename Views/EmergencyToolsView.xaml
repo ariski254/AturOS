@@ -1,4 +1,4 @@
-<UserControl x:Class="AturOS.Views.EmergencyToolsView"
+﻿<UserControl x:Class="AturOS.Views.EmergencyToolsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -7,11 +7,11 @@
              d:DesignHeight="850" d:DesignWidth="850">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="32,24,32,32">
-        <StackPanel>
+        <StackPanel HorizontalAlignment="Stretch">
             <!-- Header -->
             <Grid Margin="0,0,0,24">
                 <StackPanel>
-                    <TextBlock Text="Alat Darurat &amp; Pemeliharaan Hardware" Style="{StaticResource PageTitleStyle}" />
+                    <TextBlock Text="Alat Darurat &amp; Pemeliharaan Hardware" Style="{StaticResource PageTitleStyle}" TextTrimming="CharacterEllipsis" />
                     <TextBlock Text="Utilitas tanggap darurat saat sistem hang, troubleshooting integritas berkas Windows, dan diagnosa baterai laptop."
                                Style="{StaticResource PageSubtitleStyle}" />
                 </StackPanel>
@@ -22,7 +22,7 @@
                     BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,20" Visibility="Collapsed">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" MinWidth="180" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="TxtBanner" Foreground="{StaticResource BrushTextPrimary}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap" />
@@ -46,7 +46,7 @@
                     <!-- Kill Frozen Apps -->
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -61,7 +61,7 @@
                     <!-- Restart Explorer -->
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -76,7 +76,7 @@
                     <!-- Clear Clipboard -->
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -95,7 +95,7 @@
                     <!-- Battery Report -->
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -110,40 +110,55 @@
                     <!-- Lid Close Action -->
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                             <TextBlock Text="Aksi Tutup Layar Laptop (Lid Close Action)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                             <TextBlock Text="Tentukan apa yang terjadi saat layar laptop Anda ditutup: tetap menyala (Do Nothing), Sleep, atau Shutdown." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <ComboBox x:Name="ComboLidAction" Width="190" Height="36" VerticalContentAlignment="Center" Margin="0,0,8,0">
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <ComboBox x:Name="ComboLidAction" MinWidth="170" Height="34" VerticalContentAlignment="Center" Margin="0,2,8,2">
                                 <ComboBoxItem Content="Tidak Melakukan Apa-apa" IsSelected="True" Tag="0" />
                                 <ComboBoxItem Content="Tidur (Sleep)" Tag="1" />
                                 <ComboBoxItem Content="Hibernasi" Tag="2" />
                                 <ComboBoxItem Content="Matikan (Shutdown)" Tag="3" />
                             </ComboBox>
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Simpan" Click="BtnSaveLidAction_Click" />
-                        </StackPanel>
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Padding="14,0" Content="Simpan" Margin="0,2,0,2" Click="BtnSaveLidAction_Click" />
+                        </WrapPanel>
                     </Grid>
 
                     <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
 
                     <!-- Safe Mode Shortcut -->
-                    <Grid>
+                    <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
                             <TextBlock Text="Pintasan Boot ke Safe Mode (bcdedit)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                             <TextBlock Text="Setel Windows agar langsung masuk ke Safe Mode pada proses restart berikutnya untuk troubleshooting driver." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource DangerButton}" Height="34" Content="Masuk Safe Mode" Margin="0,0,8,0" Click="BtnSafeModeOn_Click" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Boot Normal" Click="BtnSafeModeOff_Click" />
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource DangerButton}" Height="34" Content="Masuk Safe Mode" Margin="0,2,8,2" Click="BtnSafeModeOn_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Boot Normal" Margin="0,2,0,2" Click="BtnSafeModeOff_Click" />
+                        </WrapPanel>
+                    </Grid>
+
+                    <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
+
+                    <!-- Ghost Devices Cleanup -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="180" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
+                            <TextBlock Text="Pembersih Ghost Devices (Driver Perangkat Terputus)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
+                            <TextBlock Text="Hapus entri phantom driver perangkat keras lama yang sudah tidak terhubung (misal flashdisk, mouse, controller, atau Bluetooth lama) untuk merapikan Device Manager dan Registry." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
+                        <Button x:Name="BtnGhostDevices" Grid.Column="1" Style="{StaticResource SecondaryButton}" Height="34" Content="Bersihkan Ghost Devices" Click="BtnCleanGhostDevices_Click" VerticalAlignment="Center" />
                     </Grid>
                 </StackPanel>
             </Border>
@@ -151,14 +166,8 @@
             <!-- Section 3: System File Integrity (SFC & DISM) -->
             <TextBlock Text="Pemeriksaan Integritas Sistem (SFC &amp; DISM)" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,12" />
             <Border Style="{StaticResource CardStyle}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="16" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <Border Grid.Column="0" Background="{StaticResource BrushBackground}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" CornerRadius="8" Padding="18">
+                <UniformGrid Rows="1" Columns="2">
+                    <Border Background="{StaticResource BrushBackground}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,8,0">
                         <StackPanel>
                             <TextBlock Text="SFC Scannow (System File Checker)" Style="{StaticResource CardTitleStyle}" />
                             <TextBlock Text="Pindai seluruh file sistem Windows dan perbaiki otomatis file yang hilang atau korup."
@@ -167,7 +176,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="2" Background="{StaticResource BrushBackground}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" CornerRadius="8" Padding="18">
+                    <Border Background="{StaticResource BrushBackground}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" CornerRadius="8" Padding="18" Margin="8,0,0,0">
                         <StackPanel>
                             <TextBlock Text="DISM Restore Health" Style="{StaticResource CardTitleStyle}" />
                             <TextBlock Text="Perbaiki komponen citra Windows yang rusak menggunakan sumber data Windows Update resmi."
@@ -175,7 +184,7 @@
                             <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Jalankan DISM Restore" Click="BtnRunDism_Click" />
                         </StackPanel>
                     </Border>
-                </Grid>
+                </UniformGrid>
             </Border>
         </StackPanel>
     </ScrollViewer>

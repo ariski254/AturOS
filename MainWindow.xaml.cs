@@ -68,57 +68,61 @@ public partial class MainWindow : Window
         LoggerService.Instance.Info($"AturOS dimulai pada {osName} {osBuild} ({arch}), Admin: {isAdmin}");
     }
 
+    private string _currentDestination = "";
+
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
         if (sender is RadioButton rb && rb.Tag is string destination)
         {
+            if (_currentDestination == destination && MainContentHost.Content != null) return;
             NavigateTo(destination);
         }
     }
 
     private void NavigateTo(string destination)
     {
-        switch (destination)
+        if (_currentDestination == destination && MainContentHost.Content != null)
         {
-            case "Dashboard":
-                MainContentHost.Content = _dashboardView.Value;
-                break;
-            case "Lite":
-                MainContentHost.Content = _liteView.Value;
-                break;
-            case "Debloater":
-                MainContentHost.Content = _debloaterView.Value;
-                break;
-            case "Cleaner":
-                MainContentHost.Content = _cleanerView.Value;
-                break;
-            case "Hardware":
-                MainContentHost.Content = _hardwareView.Value;
-                break;
-            case "Memory":
-                MainContentHost.Content = _memoryView.Value;
-                break;
-            case "Update":
-                MainContentHost.Content = _updateView.Value;
-                break;
-            case "Doctor":
-                MainContentHost.Content = _doctorView.Value;
-                break;
-            case "Network":
-                MainContentHost.Content = _networkView.Value;
-                break;
-            case "Explorer":
-                MainContentHost.Content = _explorerView.Value;
-                break;
-            case "Winget":
-                MainContentHost.Content = _wingetView.Value;
-                break;
-            case "Emergency":
-                MainContentHost.Content = _emergencyView.Value;
-                break;
-            case "Backup":
-                MainContentHost.Content = _backupView.Value;
-                break;
+            return;
+        }
+
+        try
+        {
+            object targetView = destination switch
+            {
+                "Dashboard" => _dashboardView.Value,
+                "Lite" => _liteView.Value,
+                "Debloater" => _debloaterView.Value,
+                "Cleaner" => _cleanerView.Value,
+                "Hardware" => _hardwareView.Value,
+                "Memory" => _memoryView.Value,
+                "Update" => _updateView.Value,
+                "Doctor" => _doctorView.Value,
+                "Network" => _networkView.Value,
+                "Explorer" => _explorerView.Value,
+                "Winget" => _wingetView.Value,
+                "Emergency" => _emergencyView.Value,
+                "Backup" => _backupView.Value,
+                _ => _dashboardView.Value
+            };
+
+            if (MainContentHost.Content == targetView)
+            {
+                _currentDestination = destination;
+                return;
+            }
+
+            _currentDestination = destination;
+            MainContentHost.Content = targetView;
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Error($"Gagal beralih ke menu '{destination}': {ex.Message}\n{ex}");
+            MessageBox.Show(
+                $"Gagal memuat halaman menu '{destination}':\n{ex.Message}\n\nOperasi diamankan.",
+                "Navigasi Menu",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
         }
     }
 
@@ -159,67 +163,54 @@ public partial class MainWindow : Window
         if (query.Contains("doc") || query.Contains("sfc") || query.Contains("dism") || query.Contains("rusak") || query.Contains("repair") || query.Contains("perbaik") || query.Contains("chkdsk") || query.Contains("dirty"))
         {
             NavDoctor.IsChecked = true;
-            NavigateTo("Doctor");
         }
-        else if (query.Contains("lite") || query.Contains("level") || query.Contains("edge") || query.Contains("barebone") || query.Contains("pangkas"))
+        else if (query.Contains("performa") || query.Contains("profil") || query.Contains("mode") || query.Contains("lite") || query.Contains("level") || query.Contains("edge") || query.Contains("barebone") || query.Contains("pangkas"))
         {
             NavLite.IsChecked = true;
-            NavigateTo("Lite");
         }
-        else if (query.Contains("debloat") || query.Contains("uwp") || query.Contains("copot") || query.Contains("app"))
+        else if (query.Contains("uninstall") || query.Contains("uninstaller") || query.Contains("paksa") || query.Contains("debloat") || query.Contains("uwp") || query.Contains("copot") || query.Contains("app"))
         {
             NavDebloater.IsChecked = true;
-            NavigateTo("Debloater");
         }
-        else if (query.Contains("clean") || query.Contains("sampah") || query.Contains("temp") || query.Contains("storage") || query.Contains("drive") || query.Contains("hiber") || query.Contains("compact") || query.Contains("sense") || query.Contains("reserved") || query.Contains("access"))
+        else if (query.Contains("penyimpanan") || query.Contains("clean") || query.Contains("sampah") || query.Contains("temp") || query.Contains("storage") || query.Contains("drive") || query.Contains("hiber") || query.Contains("compact") || query.Contains("sense") || query.Contains("reserved") || query.Contains("access"))
         {
             NavCleaner.IsChecked = true;
-            NavigateTo("Cleaner");
         }
         else if (query.Contains("game") || query.Contains("gaming") || query.Contains("fps") || query.Contains("gpu") || query.Contains("hags") || query.Contains("hard") || query.Contains("core") || query.Contains("tick") || query.Contains("ultimate") || query.Contains("power") || query.Contains("priority") || query.Contains("throttl") || query.Contains("delay"))
         {
             NavHardware.IsChecked = true;
-            NavigateTo("Hardware");
         }
-        else if (query.Contains("ram") || query.Contains("mem") || query.Contains("working set") || query.Contains("standby") || query.Contains("pagefile") || query.Contains("sysmain") || query.Contains("compress") || query.Contains("paging"))
+        else if (query.Contains("ram") || query.Contains("memori") || query.Contains("mem") || query.Contains("working set") || query.Contains("standby") || query.Contains("pagefile") || query.Contains("sysmain") || query.Contains("compress") || query.Contains("paging"))
         {
             NavMemory.IsChecked = true;
-            NavigateTo("Memory");
         }
         else if (query.Contains("update") || query.Contains("lockdown") || query.Contains("patch") || query.Contains("2099"))
         {
             NavUpdate.IsChecked = true;
-            NavigateTo("Update");
         }
         else if (query.Contains("dns") || query.Contains("ping") || query.Contains("cloudflare") || query.Contains("net") || query.Contains("ip"))
         {
             NavNetwork.IsChecked = true;
-            NavigateTo("Network");
         }
         else if (query.Contains("explor") || query.Contains("menu") || query.Contains("context") || query.Contains("folder") || query.Contains("hidden") || query.Contains("shortcut"))
         {
             NavExplorer.IsChecked = true;
-            NavigateTo("Explorer");
         }
         else if (query.Contains("winget") || query.Contains("pasang") || query.Contains("install") || query.Contains("aplikasi"))
         {
             NavWinget.IsChecked = true;
-            NavigateTo("Winget");
         }
         else if (query.Contains("darurat") || query.Contains("task") || query.Contains("baterai") || query.Contains("emergen") || query.Contains("hang") || query.Contains("macet"))
         {
             NavEmergency.IsChecked = true;
-            NavigateTo("Emergency");
         }
         else if (query.Contains("back") || query.Contains("restor") || query.Contains("point") || query.Contains("cadang") || query.Contains("reg"))
         {
             NavBackup.IsChecked = true;
-            NavigateTo("Backup");
         }
         else
         {
             NavDashboard.IsChecked = true;
-            NavigateTo("Dashboard");
         }
     }
 

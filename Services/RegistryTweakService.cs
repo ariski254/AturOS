@@ -259,7 +259,7 @@ public class RegistryTweakService
 
     public static async Task<bool> RestartExplorerAsync()
     {
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             try
             {
@@ -274,7 +274,7 @@ public class RegistryTweakService
                     catch { }
                 }
 
-                Thread.Sleep(500);
+                await Task.Delay(500);
                 System.Diagnostics.Process.Start("explorer.exe");
                 LoggerService.Instance.Success("Windows Explorer berhasil direstart.");
                 return true;

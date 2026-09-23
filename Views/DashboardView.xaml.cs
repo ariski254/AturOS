@@ -12,7 +12,9 @@ public partial class DashboardView : UserControl
     private readonly MemoryOptimizerService _memoryService = new();
     private readonly StorageCleanerService _cleanerService = new();
     private readonly PerformanceProfileService _profileService = new();
+    private readonly WindowsLiteService _liteService = new();
     private DispatcherTimer? _timer;
+    private bool _hasLoadedHwTier = false;
 
     public DashboardView()
     {
@@ -25,16 +27,58 @@ public partial class DashboardView : UserControl
     private async void DashboardView_Loaded(object sender, RoutedEventArgs e)
     {
         RefreshMetrics();
+        LoadHardwareTier();
 
         var mode = await _profileService.DetectCurrentProfileAsync();
         UpdateProfileRadio(mode);
 
-        _timer = new DispatcherTimer
+        if (_timer == null)
         {
-            Interval = TimeSpan.FromMilliseconds(1500)
-        };
-        _timer.Tick += (s, ev) => RefreshMetrics();
-        _timer.Start();
+            _timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(1500)
+            };
+            _timer.Tick += (s, ev) => RefreshMetrics();
+        }
+        if (!_timer.IsEnabled)
+        {
+            _timer.Start();
+        }
+    }
+
+    private async void LoadHardwareTier()
+    {
+        if (_hasLoadedHwTier) return;
+
+        try
+        {
+            var hw = await System.Threading.Tasks.Task.Run(() => _liteService.GetHardwareEnvironment());
+            if (!IsLoaded) return;
+            _hasLoadedHwTier = true;
+            TxtInfoHwTier.Text = $"TIER: {hw.HardwareTierBadge} • {hw.RecommendationText}";
+
+            switch (hw.HardwareTier)
+            {
+                case HardwareTier.UltraLow:
+                case HardwareTier.Low:
+                    BorderHwTierBadge.Background = (System.Windows.Media.Brush)FindResource("BrushWarningLight");
+                    TxtInfoHwTier.Foreground = (System.Windows.Media.Brush)FindResource("BrushWarning");
+                    break;
+                case HardwareTier.Mid:
+                case HardwareTier.High:
+                    BorderHwTierBadge.Background = (System.Windows.Media.Brush)FindResource("BrushSuccessLight");
+                    TxtInfoHwTier.Foreground = (System.Windows.Media.Brush)FindResource("BrushSuccess");
+                    break;
+                default:
+                    BorderHwTierBadge.Background = (System.Windows.Media.Brush)FindResource("BrushAccentLight");
+                    TxtInfoHwTier.Foreground = (System.Windows.Media.Brush)FindResource("BrushAccent");
+                    break;
+            }
+        }
+        catch
+        {
+            TxtInfoHwTier.Text = "TIER: DETEKSI SISTEM";
+        }
     }
 
     private void UpdateProfileRadio(PerformanceProfileMode mode)
@@ -108,6 +152,7 @@ public partial class DashboardView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
+        BtnOptimizeNow.IsEnabled = false;
         try
         {
             // 1. Memory optimization
@@ -127,6 +172,10 @@ public partial class DashboardView : UserControl
         catch (Exception ex)
         {
             ShowBanner($"Gagal menjalankan optimasi: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            BtnOptimizeNow.IsEnabled = true;
         }
     }
 

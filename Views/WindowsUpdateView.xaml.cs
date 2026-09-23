@@ -23,38 +23,92 @@ public partial class WindowsUpdateView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
-        var (success, msg) = await _updateService.ApplyHardLockdownAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _updateService.ApplyHardLockdownAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnPause2099_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _updateService.ApplyPauseTo2099Async();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _updateService.ApplyPauseTo2099Async();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnSecurityOnly_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _updateService.ApplySecurityOnlyModeAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _updateService.ApplySecurityOnlyModeAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnManualMode_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _updateService.ApplyManualNotificationModeAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _updateService.ApplyManualNotificationModeAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnBlockDrivers_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _updateService.BlockDriverUpdatesAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _updateService.BlockDriverUpdatesAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnAllowDrivers_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _updateService.BlockDriverUpdatesAsync(false);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _updateService.BlockDriverUpdatesAsync(false);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnRestoreDefault_Click(object sender, RoutedEventArgs e)
@@ -67,8 +121,17 @@ public partial class WindowsUpdateView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
-        var (success, msg) = await _updateService.RestoreDefaultUpdateAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _updateService.RestoreDefaultUpdateAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private CancellationTokenSource? _bannerCts;

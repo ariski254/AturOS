@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using AturOS.Helpers;
 using AturOS.Models;
 
@@ -36,7 +41,18 @@ public class MemoryOptimizerService
                             WorkingSetBytes = p.WorkingSet64
                         });
                     }
-                    catch { }
+                    catch (InvalidOperationException)
+                    {
+                        // Process exited during query
+                    }
+                    catch (Win32Exception)
+                    {
+                        // Protected process access denied
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerService.Instance.Warning($"Pengecualian saat membaca metrik proses PID {p.Id}: {ex.Message}");
+                    }
                     finally
                     {
                         p.Dispose();
@@ -54,13 +70,12 @@ public class MemoryOptimizerService
 
     public async Task<MemoryOptimizationResult> OptimizeRamAsync(Action<string>? progressCallback = null)
     {
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             var result = new MemoryOptimizationResult();
 
             // 1. Measure RAM before
-            var memBefore = new WindowsApi.MEMORYSTATUSEX();
-            if (WindowsApi.GlobalMemoryStatusEx(memBefore))
+            if (NativeMethods.TryGetMemoryStatus(out var memBefore))
             {
                 result.RamBeforeGb = Math.Round((double)(memBefore.ullTotalPhys - memBefore.ullAvailPhys) / (1024 * 1024 * 1024), 2);
             }
@@ -82,28 +97,10 @@ public class MemoryOptimizerService
                         continue;
                     }
 
-                    // Open process with minimal required permissions: PROCESS_SET_QUOTA | PROCESS_QUERY_LIMITED_INFORMATION
-                    const uint desiredAccess = WindowsApi.PROCESS_SET_QUOTA | WindowsApi.PROCESS_QUERY_LIMITED_INFORMATION;
-                    IntPtr hProcess = WindowsApi.OpenProcess(desiredAccess, false, p.Id);
-
-                    if (hProcess != IntPtr.Zero)
+                    bool trimmed = NativeMethods.SafeEmptyWorkingSet(p.Id);
+                    if (trimmed)
                     {
-                        try
-                        {
-                            int res = WindowsApi.EmptyWorkingSet(hProcess);
-                            if (res != 0)
-                            {
-                                result.ProcessedCount++;
-                            }
-                            else
-                            {
-                                result.SkippedCount++;
-                            }
-                        }
-                        finally
-                        {
-                            WindowsApi.CloseHandle(hProcess);
-                        }
+                        result.ProcessedCount++;
                     }
                     else
                     {
@@ -121,9 +118,8 @@ public class MemoryOptimizerService
             }
 
             // 2. Measure RAM after
-            Thread.Sleep(300); // Allow OS memory manager to update counters
-            var memAfter = new WindowsApi.MEMORYSTATUSEX();
-            if (WindowsApi.GlobalMemoryStatusEx(memAfter))
+            await Task.Delay(300); // Allow OS memory manager to update counters
+            if (NativeMethods.TryGetMemoryStatus(out var memAfter))
             {
                 result.RamAfterGb = Math.Round((double)(memAfter.ullTotalPhys - memAfter.ullAvailPhys) / (1024 * 1024 * 1024), 2);
             }
@@ -141,29 +137,40 @@ public class MemoryOptimizerService
         return await Task.Run(async () =>
         {
             var result = new MemoryOptimizationResult();
-            var memBefore = new WindowsApi.MEMORYSTATUSEX();
-            if (WindowsApi.GlobalMemoryStatusEx(memBefore))
+            if (NativeMethods.TryGetMemoryStatus(out var memBefore))
             {
                 result.RamBeforeGb = Math.Round((double)(memBefore.ullTotalPhys - memBefore.ullAvailPhys) / (1024 * 1024 * 1024), 2);
             }
 
             LoggerService.Instance.Info("Membersihkan Standby List dan System Cache...");
 
+            // 1. Kernel Standby List Purge via NtSetSystemInformation (if Administrator)
+            bool purgedKernel = NativeMethods.SafePurgeStandbyList();
+            if (purgedKernel)
+            {
+                LoggerService.Instance.Info("Kernel NtSetSystemInformation MemoryPurgeStandbyList berhasil dieksekusi.");
+            }
+
+            // 2. Trim current process working set safely
+            try
+            {
+                using var currentProc = Process.GetCurrentProcess();
+                NativeMethods.SetProcessWorkingSetSize(currentProc.Handle, (IntPtr)(-1), (IntPtr)(-1));
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Instance.Warning($"Catatan trimming working set internal: {ex.Message}");
+            }
+
+            // 3. Clean working set across processes
+            await OptimizeRamAsync();
+
+            // 4. Force GC collection
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            try
-            {
-                var hCurrent = Process.GetCurrentProcess().Handle;
-                WindowsApi.SetProcessWorkingSetSize(hCurrent, (IntPtr)(-1), (IntPtr)(-1));
-            }
-            catch { }
-
-            await OptimizeRamAsync();
-
-            Thread.Sleep(300);
-            var memAfter = new WindowsApi.MEMORYSTATUSEX();
-            if (WindowsApi.GlobalMemoryStatusEx(memAfter))
+            await Task.Delay(300);
+            if (NativeMethods.TryGetMemoryStatus(out var memAfter))
             {
                 result.RamAfterGb = Math.Round((double)(memAfter.ullTotalPhys - memAfter.ullAvailPhys) / (1024 * 1024 * 1024), 2);
             }
@@ -275,8 +282,15 @@ public class MemoryOptimizerService
         });
     }
 
-    public async Task<bool?> GetMemoryCompressionStatusAsync()
+    private bool? _cachedCompressionStatus = null;
+
+    public async Task<bool?> GetMemoryCompressionStatusAsync(bool forceRefresh = false)
     {
+        if (!forceRefresh && _cachedCompressionStatus.HasValue)
+        {
+            return _cachedCompressionStatus.Value;
+        }
+
         try
         {
             var res = await ProcessHelper.RunPowerShellScriptAsync("(Get-MMAgent).MemoryCompression", timeoutMs: 15000);
@@ -284,6 +298,7 @@ public class MemoryOptimizerService
             {
                 if (bool.TryParse(res.StandardOutput.Trim(), out bool val))
                 {
+                    _cachedCompressionStatus = val;
                     return val;
                 }
             }
@@ -292,7 +307,7 @@ public class MemoryOptimizerService
         {
             LoggerService.Instance.Warning($"Gagal membaca status MemoryCompression: {ex.Message}");
         }
-        return null;
+        return _cachedCompressionStatus;
     }
 
     public async Task<(bool Success, string Message)> SetMemoryCompressionAsync(bool enable)
@@ -305,6 +320,7 @@ public class MemoryOptimizerService
             var res = await ProcessHelper.RunPowerShellScriptAsync(cmd, timeoutMs: 20000);
             if (res.Success)
             {
+                _cachedCompressionStatus = enable;
                 return (true, enable ? "Kompresi Memori Windows (Memory Compression) diaktifkan." : "Kompresi Memori Windows dimatikan (menghemat beban siklus CPU).");
             }
             return (false, $"Gagal mengubah status kompresi memori: {res.StandardError}");

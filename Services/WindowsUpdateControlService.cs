@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using AturOS.Helpers;
 using Microsoft.Win32;
 
@@ -26,7 +28,10 @@ public class WindowsUpdateControlService
             key.SetValue("NoAutoUpdate", 1, RegistryValueKind.DWord);
             key.SetValue("AUOptions", 1, RegistryValueKind.DWord); // 1 = Keep my computer up to date is disabled
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Catatan penetapan registry AU Windows Update: {ex.Message}");
+        }
 
         // 3. Disable Update Orchestrator scheduled tasks
         await ProcessHelper.RunPowerShellScriptAsync(@"
@@ -60,6 +65,7 @@ public class WindowsUpdateControlService
             }
             catch (Exception ex)
             {
+                LoggerService.Instance.Error($"Gagal menyetel jeda update: {ex.Message}");
                 return (false, $"Gagal menyetel jeda update: {ex.Message}");
             }
         });
@@ -89,6 +95,7 @@ public class WindowsUpdateControlService
             }
             catch (Exception ex)
             {
+                LoggerService.Instance.Error($"Gagal menerapkan Mode Keamanan: {ex.Message}");
                 return (false, $"Error: {ex.Message}");
             }
         });
@@ -111,6 +118,7 @@ public class WindowsUpdateControlService
             }
             catch (Exception ex)
             {
+                LoggerService.Instance.Error($"Gagal menerapkan Mode Notifikasi: {ex.Message}");
                 return (false, $"Error: {ex.Message}");
             }
         });
@@ -132,6 +140,7 @@ public class WindowsUpdateControlService
             }
             catch (Exception ex)
             {
+                LoggerService.Instance.Error($"Gagal menyetel pembaruan driver: {ex.Message}");
                 return (false, $"Error: {ex.Message}");
             }
         });
@@ -166,7 +175,10 @@ public class WindowsUpdateControlService
                 pauseKey.DeleteValue("PauseUpdatesExpiryTime", false);
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Catatan saat menghapus registry update: {ex.Message}");
+        }
 
         // 3. Re-enable tasks
         await ProcessHelper.RunPowerShellScriptAsync(@"

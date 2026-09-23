@@ -27,15 +27,19 @@ public class RestorePointService
         // Checkpoint-Computer -Description ... -RestorePointType "MODIFY_SETTINGS"
         var script = $@"
             try {{
-                # Ensure VSS and Software Shadow Copy Provider services are running
+                # 0. Allow frequent restore point creation (bypass 1440 minute limitation in Windows 10/11)
+                Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore' -Name 'SystemRestorePointCreationFrequency' -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
+
+                # 1. Ensure System Protection is enabled on SystemDrive
+                Enable-ComputerRestore -Drive ""$($env:SystemDrive)\"" -ErrorAction SilentlyContinue
+
+                # 2. Ensure VSS and Software Shadow Copy Provider services are running
                 Set-Service -Name 'vss' -StartupType Manual -ErrorAction SilentlyContinue
                 Start-Service -Name 'vss' -ErrorAction SilentlyContinue
                 Set-Service -Name 'swprv' -StartupType Manual -ErrorAction SilentlyContinue
                 Start-Service -Name 'swprv' -ErrorAction SilentlyContinue
 
-                # Check if System Restore is enabled on C:
-                $sr = Get-ComputerRestorePoint -ErrorAction SilentlyContinue
-                # Create restore point
+                # 3. Create restore point
                 Checkpoint-Computer -Description '{description}' -RestorePointType 'MODIFY_SETTINGS' -ErrorAction Stop
                 Write-Output 'BERHASIL'
             }} catch {{
@@ -70,31 +74,37 @@ public class RestorePointService
         var script = @"
             $points = Get-ComputerRestorePoint -ErrorAction SilentlyContinue | Select-Object SequenceNumber, Description, CreationTime, EventType
             if ($points) {
-                $points | ConvertTo-Json -Compress
+                $points | ConvertTo-Csv -NoTypeInformation
             }
         ";
 
         var result = await ProcessHelper.RunPowerShellScriptAsync(script, timeoutMs: 30000);
         if (result.Success && !string.IsNullOrWhiteSpace(result.StandardOutput))
         {
-            string json = result.StandardOutput.Trim();
             try
             {
-                var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                if (json.StartsWith("["))
+                var lines = result.StandardOutput.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
                 {
-                    var items = System.Text.Json.JsonSerializer.Deserialize<List<RestorePointItem>>(json, options);
-                    if (items != null) list.AddRange(items);
-                }
-                else if (json.StartsWith("{"))
-                {
-                    var item = System.Text.Json.JsonSerializer.Deserialize<RestorePointItem>(json, options);
-                    if (item != null) list.Add(item);
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    var fields = ProcessHelper.ParseCsvLine(line);
+                    if (fields.Count < 4) continue;
+                    if (fields[0].Equals("SequenceNumber", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    if (!int.TryParse(fields[0], out int seqNum)) continue;
+
+                    list.Add(new RestorePointItem
+                    {
+                        SequenceNumber = seqNum,
+                        Description = fields[1],
+                        CreationTime = fields[2],
+                        EventType = fields[3]
+                    });
                 }
             }
             catch (Exception ex)
             {
-                LoggerService.Instance.Warning($"Gagal mem-parse restore points JSON: {ex.Message}");
+                LoggerService.Instance.Warning($"Gagal mem-parse restore points: {ex.Message}");
             }
         }
 

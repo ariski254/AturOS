@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net.NetworkInformation;
 using AturOS.Helpers;
 using AturOS.Models;
@@ -48,51 +49,125 @@ public class DnsOptimizerService
 
         try
         {
-            long measuredPing = await Task.Run(async () =>
+            long measuredLatency = await Task.Run(async () =>
             {
-                try
-                {
-                    using var ping = new Ping();
-                    long total = 0;
-                    int count = 0;
+                var testDomains = new[] { "google.com", "cloudflare.com", "microsoft.com" };
+                long totalLatency = 0;
+                int successfulQueries = 0;
 
-                    for (int i = 0; i < 3; i++)
+                foreach (var domain in testDomains)
+                {
+                    try
                     {
-                        try
+                        var latency = await QueryDnsResolutionLatencyAsync(preset.PrimaryDns, domain, timeoutMs: 1800);
+                        if (latency >= 0)
                         {
-                            var reply = await ping.SendPingAsync(preset.PrimaryDns, 1500);
-                            if (reply.Status == IPStatus.Success)
-                            {
-                                total += reply.RoundtripTime;
-                                count++;
-                            }
+                            totalLatency += latency;
+                            successfulQueries++;
                         }
-                        catch
-                        {
-                            // Ignore single ping failure, continue next trial
-                        }
-                        await Task.Delay(50);
                     }
+                    catch
+                    {
+                        // Domain query error or timeout, continue to next domain
+                    }
+                }
 
-                    return count > 0 ? (total / count) : -1;
-                }
-                catch
-                {
-                    return -1;
-                }
+                return successfulQueries > 0 ? (totalLatency / successfulQueries) : -1;
             });
 
-            preset.PingMs = measuredPing;
+            preset.PingMs = measuredLatency;
+            if (measuredLatency < 0)
+            {
+                LoggerService.Instance.Warning($"Pengujian latensi DNS {preset.Name} ({preset.PrimaryDns}): tidak ada respons dari server dalam batas waktu.");
+            }
         }
         catch (Exception ex)
         {
-            LoggerService.Instance.Warning($"Pengujian ping DNS {preset.Name} gagal: {ex.Message}");
+            LoggerService.Instance.Warning($"Pengujian kueri DNS {preset.Name} ({preset.PrimaryDns}) gagal: {ex.Message}");
             preset.PingMs = -1;
         }
         finally
         {
             preset.IsTesting = false;
         }
+    }
+
+    /// <summary>
+    /// Melakukan kueri DNS mentah langsung ke server DNS target via UDP port 53 (FITUR.md Bab 30).
+    /// Mengukur waktu bolak-balik resolusi domain aktual tanpa menggunakan ping ICMP.
+    /// </summary>
+    private static async Task<long> QueryDnsResolutionLatencyAsync(string dnsServerIp, string domainName, int timeoutMs = 2000)
+    {
+        if (!System.Net.IPAddress.TryParse(dnsServerIp, out var serverIp))
+        {
+            return -1;
+        }
+
+        using var udpClient = new System.Net.Sockets.UdpClient();
+        udpClient.Client.ReceiveTimeout = timeoutMs;
+        udpClient.Client.SendTimeout = timeoutMs;
+
+        var queryPacket = BuildDnsQueryPacket(domainName);
+        var endpoint = new System.Net.IPEndPoint(serverIp, 53);
+
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        try
+        {
+            await udpClient.SendAsync(queryPacket, queryPacket.Length, endpoint);
+
+            using var cts = new System.Threading.CancellationTokenSource(timeoutMs);
+            var receiveTask = udpClient.ReceiveAsync();
+
+            var completedTask = await Task.WhenAny(receiveTask, Task.Delay(timeoutMs, cts.Token));
+            if (completedTask == receiveTask)
+            {
+                stopwatch.Stop();
+                var result = await receiveTask;
+                // Verifikasi ada response payload (DNS header minimal 12 byte)
+                if (result.Buffer.Length >= 12)
+                {
+                    return Math.Max(1, stopwatch.ElapsedMilliseconds);
+                }
+            }
+        }
+        catch
+        {
+            return -1;
+        }
+
+        return -1;
+    }
+
+    private static byte[] BuildDnsQueryPacket(string domainName)
+    {
+        using var ms = new MemoryStream();
+        using var writer = new BinaryWriter(ms);
+
+        // Header DNS (12 bytes)
+        ushort id = (ushort)Random.Shared.Next(1, 65535);
+        writer.Write(System.Net.IPAddress.HostToNetworkOrder((short)id));
+        writer.Write(new byte[] { 0x01, 0x00 }); // Flags: Standard query, Recursion Desired
+        writer.Write(System.Net.IPAddress.HostToNetworkOrder((short)1)); // QDCOUNT = 1
+        writer.Write(System.Net.IPAddress.HostToNetworkOrder((short)0)); // ANCOUNT = 0
+        writer.Write(System.Net.IPAddress.HostToNetworkOrder((short)0)); // NSCOUNT = 0
+        writer.Write(System.Net.IPAddress.HostToNetworkOrder((short)0)); // ARCOUNT = 0
+
+        // Question: QNAME
+        foreach (var label in domainName.Split('.'))
+        {
+            byte len = (byte)label.Length;
+            writer.Write(len);
+            writer.Write(System.Text.Encoding.ASCII.GetBytes(label));
+        }
+        writer.Write((byte)0); // End of QNAME
+
+        // QTYPE = 1 (A Record)
+        writer.Write(System.Net.IPAddress.HostToNetworkOrder((short)1));
+        // QCLASS = 1 (IN - Internet)
+        writer.Write(System.Net.IPAddress.HostToNetworkOrder((short)1));
+
+        return ms.ToArray();
     }
 
     public async Task<(bool Success, string Message)> ApplyDnsAsync(string primaryDns, string secondaryDns)

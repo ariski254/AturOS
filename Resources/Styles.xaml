@@ -46,66 +46,68 @@
     <!-- TYPOGRAPHY HIERARCHY STYLES (Front.md Standard)                           -->
     <!-- ========================================================================= -->
 
-    <!-- 1. Page Title (26-28pt Bold) -->
+    <!-- 1. Page Title (28pt Bold) -->
     <Style x:Key="PageTitleStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontSize" Value="28" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
 
-    <!-- 2. Page Subtitle (13-13.5pt Normal) -->
+    <!-- 2. Page Subtitle (13.5pt Normal) -->
     <Style x:Key="PageSubtitleStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="13.5" />
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="Foreground" Value="{StaticResource BrushTextSecondary}" />
         <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Margin" Value="0,4,0,0" />
+        <Setter Property="Margin" Value="0,0,0,0" />
     </Style>
 
-    <!-- 3. Section Title (17-18pt SemiBold) -->
+    <!-- 3. Section Title (18pt SemiBold) -->
     <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontSize" Value="18" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- 4. Card Title (14-15pt SemiBold) -->
+    <!-- 4. Card Title (15pt SemiBold) -->
     <Style x:Key="CardTitleStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14.5" />
+        <Setter Property="FontSize" Value="15" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- 5. Primary Metric Value (28-32pt Bold) -->
+    <!-- 5. Primary Metric Value (28pt Bold) -->
     <Style x:Key="MetricValueStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="30" />
+        <Setter Property="FontSize" Value="28" />
         <Setter Property="FontWeight" Value="Bold" />
         <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- 6. Body Text (13pt Normal) -->
+    <!-- 6. Body Text (13.5pt Normal) -->
     <Style x:Key="BodyTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="13.5" />
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="Foreground" Value="{StaticResource BrushTextBody}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- 7. Secondary Text (12pt Normal) -->
+    <!-- 7. Secondary Text (12.5pt Normal) -->
     <Style x:Key="SecondaryTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="12.5" />
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="Foreground" Value="{StaticResource BrushTextSecondary}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
-    <!-- 8. Muted / Caption Text (11pt Normal) -->
+    <!-- 8. Muted / Caption Text (11.5pt Normal) -->
     <Style x:Key="MutedTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontSize" Value="11.5" />
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
         <Setter Property="VerticalAlignment" Value="Center" />

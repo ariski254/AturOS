@@ -12,6 +12,8 @@ public partial class AppDebloaterView : UserControl
     private List<DebloatAppItem> _allApps = new();
     public ObservableCollection<DebloatAppItem> FilteredApps { get; } = new();
     private bool _isInitialized = false;
+    private bool _hasLoadedCatalog = false;
+    private bool _isScanning = false;
 
     public AppDebloaterView()
     {
@@ -23,6 +25,12 @@ public partial class AppDebloaterView : UserControl
 
     private async void AppDebloaterView_Loaded(object sender, RoutedEventArgs e)
     {
+        // Jika katalog sudah pernah dimuat, jangan scan ulang otomatis agar perpindahan menu instan
+        if (_hasLoadedCatalog && _allApps.Count > 0)
+        {
+            return;
+        }
+
         try
         {
             await ReloadCatalogAsync();
@@ -36,6 +44,9 @@ public partial class AppDebloaterView : UserControl
 
     private async Task ReloadCatalogAsync()
     {
+        if (_isScanning) return;
+        _isScanning = true;
+
         if (ProgressScanning != null) ProgressScanning.Visibility = Visibility.Visible;
         if (BtnRefresh != null) BtnRefresh.IsEnabled = false;
         if (TxtAppCount != null) TxtAppCount.Text = "Memindai seluruh aplikasi desktop dan paket modern Windows...";
@@ -43,10 +54,17 @@ public partial class AppDebloaterView : UserControl
         try
         {
             _allApps = await _debloaterService.ScanInstalledAppsAsync();
+            _hasLoadedCatalog = true;
             ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Error($"Gagal memuat katalog App Debloater: {ex.Message}");
+            ShowBanner($"Gagal memuat katalog aplikasi: {ex.Message}", isError: true);
         }
         finally
         {
+            _isScanning = false;
             if (ProgressScanning != null) ProgressScanning.Visibility = Visibility.Collapsed;
             if (BtnRefresh != null) BtnRefresh.IsEnabled = true;
         }
@@ -105,8 +123,21 @@ public partial class AppDebloaterView : UserControl
 
     private async void BtnRefresh_Click(object sender, RoutedEventArgs e)
     {
-        await ReloadCatalogAsync();
-        ShowBanner($"Katalog aplikasi berhasil diperbarui. Total {_allApps.Count} aplikasi ditemukan.", isError: false);
+        if (BtnRefresh != null) BtnRefresh.IsEnabled = false;
+        try
+        {
+            await ReloadCatalogAsync();
+            ShowBanner($"Katalog aplikasi berhasil diperbarui. Total {_allApps.Count} aplikasi ditemukan.", isError: false);
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Error($"Gagal menyegarkan katalog aplikasi: {ex.Message}");
+            ShowBanner($"Gagal menyegarkan katalog: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            if (BtnRefresh != null) BtnRefresh.IsEnabled = true;
+        }
     }
 
     private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
@@ -125,28 +156,92 @@ public partial class AppDebloaterView : UserControl
     {
         if (sender is not Button btn || btn.Tag is not DebloatAppItem app) return;
 
-        string prompt = app.AppType == AppInstallType.Uwp
-            ? $"Copot pemasangan paket '{app.DisplayName}' dari sistem Windows?\n\nAplikasi ini dapat dipasang kembali melalui Microsoft Store kapan saja."
-            : $"Jalankan uninstaller untuk '{app.DisplayName}'?\n\nJendela dialog pencopotan aplikasi resmi akan dijalankan.";
+        btn.IsEnabled = false;
+        try
+        {
+            ShowBanner($"Menganalisis komponen '{app.DisplayName}'...", isError: false);
+            var discovery = await PermanentUninstallEngine.DiscoverComponentsAsync(app);
 
-        var confirm = MessageBox.Show(
-            prompt,
-            $"Konfirmasi Copot {app.DisplayName}",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+            var prompt = new System.Text.StringBuilder();
+            prompt.AppendLine("KONFIRMASI PENGHAPUSAN PERMANEN (PERMANENT UNINSTALL ENGINE)");
+            prompt.AppendLine("============================================================");
+            prompt.AppendLine($"Aplikasi    : {app.DisplayName}");
+            prompt.AppendLine($"Publisher   : {(string.IsNullOrWhiteSpace(app.Publisher) ? "-" : app.Publisher)}");
+            prompt.AppendLine($"Versi       : {(string.IsNullOrWhiteSpace(app.Version) ? "-" : app.Version)}");
+            prompt.AppendLine($"Tipe        : {app.AppTypeDisplay}");
+            if (!string.IsNullOrWhiteSpace(app.InstallLocation))
+            {
+                prompt.AppendLine($"Lokasi      : {app.InstallLocation}");
+            }
+            prompt.AppendLine();
+            prompt.AppendLine("Komponen terdeteksi yang akan dibersihkan tuntas:");
+            prompt.AppendLine($"• Direktori Instalasi & Residu ({discovery.ResidualDirectories.Count} folder)");
+            if (discovery.Processes.Count > 0)
+                prompt.AppendLine($"• Proses Berjalan ({discovery.Processes.Count} proses aktif)");
+            if (discovery.Services.Count > 0)
+                prompt.AppendLine($"• Layanan Sistem Windows ({discovery.Services.Count} service terdaftar)");
+            if (discovery.ScheduledTasks.Count > 0)
+                prompt.AppendLine($"• Scheduled Tasks ({discovery.ScheduledTasks.Count} task terjadwal)");
+            if (discovery.StartupEntries.Count > 0)
+                prompt.AppendLine($"• Entri Startup / Autorun ({discovery.StartupEntries.Count} entri)");
+            if (discovery.ShortcutFiles.Count > 0)
+                prompt.AppendLine($"• Shortcut Desktop & Start Menu ({discovery.ShortcutFiles.Count} berkas .lnk)");
+            prompt.AppendLine("• Registrasi Registry Uninstall & Shell");
+            prompt.AppendLine();
+            prompt.AppendLine("Perlindungan Integritas Sistem & Pengguna:");
+            prompt.AppendLine("✓ Data Pribadi Pengguna (Documents, Desktop, Pictures): AMAN & DIPERTAHANKAN");
+            prompt.AppendLine("✓ Dependensi Sistem (Windows, System32, WinSxS): AMAN & DIPERTAHANKAN");
+            prompt.AppendLine();
+            prompt.AppendLine("Lanjutkan eksekusi pencopotan permanen?");
 
-        if (confirm != MessageBoxResult.Yes) return;
+            var confirm = MessageBox.Show(
+                prompt.ToString(),
+                $"Konfirmasi Uninstall Permanen: {app.DisplayName}",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
 
-        ShowBanner($"Sedang mencopot '{app.DisplayName}'...", isError: false);
-        var (success, msg) = await _debloaterService.UninstallAppAsync(app);
-        ShowBanner(msg, isError: !success);
-        ApplyFilter();
+            if (confirm != MessageBoxResult.Yes)
+            {
+                ShowBanner($"Uninstall '{app.DisplayName}' dibatalkan oleh pengguna.", isError: false);
+                return;
+            }
+
+            ShowBanner($"Sedang menguninstall '{app.DisplayName}'...", isError: false);
+            var (success, msg) = await _debloaterService.UninstallAppAsync(app, progressMsg =>
+            {
+                Dispatcher.Invoke(() => ShowBanner(progressMsg, isError: false));
+            });
+
+            ShowBanner(msg, isError: !success);
+            if (success)
+            {
+                _allApps.Remove(app);
+            }
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Error($"Terjadi kesalahan saat menguninstall '{app.DisplayName}': {ex.Message}");
+            ShowBanner($"Gagal menguninstall '{app.DisplayName}': {ex.Message}", isError: true);
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+        }
     }
 
     private void BtnReinstallStore_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button btn || btn.Tag is not DebloatAppItem app) return;
-        AppDebloaterService.OpenStoreForReinstall(app);
+        try
+        {
+            AppDebloaterService.OpenStoreForReinstall(app);
+        }
+        catch (Exception ex)
+        {
+            LoggerService.Instance.Warning($"Gagal membuka Microsoft Store: {ex.Message}");
+            ShowBanner("Gagal membuka Microsoft Store pada sistem ini.", isError: true);
+        }
     }
 
     private CancellationTokenSource? _bannerCts;

@@ -177,7 +177,135 @@ public class ExplorerTweaksService
                 else
                 {
                     key.DeleteValue("LowRiskFileTypes", false);
-                    return (true, "Peringatan keamanan file unduhan dikembalikan ke default.");
+                    return (true, "Peringatan 'Open File - Security Warning' dikembalikan ke default.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Error: {ex.Message}");
+            }
+        });
+    }
+
+    public bool IsWindows11 { get; }
+
+    public ExplorerTweaksService()
+    {
+        var (_, build) = SystemInfoService.GetOperatingSystemDetails();
+        IsWindows11 = build.Contains("Build") && int.TryParse(build.Replace("Build", "").Trim(), out int b) && b >= 22000;
+    }
+
+    public bool GetClassicContextMenuStatus()
+    {
+        if (!IsWindows11) return false;
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32");
+            return key != null;
+        }
+        catch { return false; }
+    }
+
+    public async Task<(bool Success, string Message)> SetClassicContextMenuAsync(bool enable)
+    {
+        return await Task.Run(() =>
+        {
+            if (!IsWindows11) return (false, "Menu Konteks Klasik hanya berlaku untuk Windows 11.");
+            try
+            {
+                if (enable)
+                {
+                    using var key = Registry.CurrentUser.CreateSubKey(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32");
+                    key.SetValue("", "");
+                    return (true, "Menu Konteks Klasik Windows 10 berhasil diaktifkan. Muat ulang Explorer untuk melihat perubahan.");
+                }
+                else
+                {
+                    Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}", false);
+                    return (true, "Menu Konteks modern default Windows 11 dikembalikan. Muat ulang Explorer untuk melihat perubahan.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Gagal mengubah menu konteks: {ex.Message}");
+            }
+        });
+    }
+
+    public bool GetOpenTerminalAdminStatus()
+    {
+        try
+        {
+            using var key = Registry.ClassesRoot.OpenSubKey(@"Directory\Background\shell\OpenTerminalAdmin");
+            return key != null;
+        }
+        catch { return false; }
+    }
+
+    public async Task<(bool Success, string Message)> SetOpenTerminalAdminAsync(bool enable)
+    {
+        return await Task.Run(() =>
+        {
+            if (!AdministratorHelper.IsAdministrator) return (false, "Membutuhkan hak Administrator.");
+            try
+            {
+                string[] locations = new[] { @"Directory\Background\shell\OpenTerminalAdmin", @"Directory\shell\OpenTerminalAdmin" };
+                if (enable)
+                {
+                    foreach (var loc in locations)
+                    {
+                        using var key = Registry.ClassesRoot.CreateSubKey(loc);
+                        key.SetValue("", "Buka Terminal sebagai Administrator");
+                        key.SetValue("Icon", "wt.exe");
+                        key.SetValue("HasLUAShield", "");
+                        using var cmdKey = key.CreateSubKey("command");
+                        cmdKey.SetValue("", "powershell.exe -Command \"Start-Process wt.exe -ArgumentList '-d', '\"\"%V\"\"' -Verb RunAs\"");
+                    }
+                    return (true, "Opsi 'Buka Terminal sebagai Administrator' berhasil ditambahkan ke menu klik-kanan.");
+                }
+                else
+                {
+                    foreach (var loc in locations)
+                    {
+                        Registry.ClassesRoot.DeleteSubKeyTree(loc, false);
+                    }
+                    return (true, "Opsi 'Buka Terminal sebagai Administrator' berhasil dihapus dari menu klik-kanan.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Error: {ex.Message}");
+            }
+        });
+    }
+
+    public bool GetDisableBingSearchStatus()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Policies\Microsoft\Windows\Explorer");
+            var val = key?.GetValue("DisableSearchBoxSuggestions");
+            return val is int i && i == 1;
+        }
+        catch { return false; }
+    }
+
+    public async Task<(bool Success, string Message)> SetDisableBingSearchAsync(bool disable)
+    {
+        return await Task.Run(() =>
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.CreateSubKey(@"Software\Policies\Microsoft\Windows\Explorer");
+                if (disable)
+                {
+                    key.SetValue("DisableSearchBoxSuggestions", 1, RegistryValueKind.DWord);
+                    return (true, "Pencarian web Bing di Start Menu dinonaktifkan (pencarian file lokal lebih cepat).");
+                }
+                else
+                {
+                    key.DeleteValue("DisableSearchBoxSuggestions", false);
+                    return (true, "Pencarian web Bing di Start Menu dikembalikan ke default.");
                 }
             }
             catch (Exception ex)

@@ -1,16 +1,42 @@
-# ==========================================
-# 1. HASIL BUILD & FILE BINER (JANGAN DI-UPLOAD)
-# ==========================================
+# ========================================================
+# 1. HASIL BUILD, ARTIFAK & BINER (JANGAN DI-PUSH KE GITHUB)
+# ========================================================
 [Bb]in/
 [Oo]bj/
 [Pp]ublish/
-publish_latest/
-update_publish.ps1
+[Pp]ublish*/
+publish_*/
 out/
+build/
+packages/
+TestResults/
+CrashDumps/
 
-# ==========================================
-# 2. CACHE IDE & PENGATURAN LOKAL DEVELOPER
-# ==========================================
+# Ekstensi Berkas Biner
+*.exe
+*.dll
+*.pdb
+*.msi
+*.msix
+*.appx
+*.appxbundle
+*.zip
+*.7z
+*.tar.gz
+
+# ========================================================
+# 2. FILE LOG, CRASH, & TEMPORARY
+# ========================================================
+*.tmp
+*.temp
+*.log
+*.crash
+*.diagnostic*
+latest_error.log
+
+# ========================================================
+# 3. CACHE IDE & PENGATURAN LOKAL DEVELOPER
+# ========================================================
 .vs/
 .vscode/
 .idea/
@@ -19,28 +45,29 @@ out/
 *.userosv
 *.sln.docstates
 *.userprefs
+*.DotSettings.user
+UpgradeLog*.XML
+UpgradeLog*.htm
 
-# ==========================================
-# 3. FILE LOG, CRASH DUMPS & SEMENTARA
-# ==========================================
-*.tmp
-*.log
-*.crash
-*.diagnostic*
-CrashDumps/
+# Script maintenance rilis lokal
+update_publish.ps1
 
-# ==========================================
-# 4. FILE SAMPAH SISTEM WINDOWS
-# ==========================================
+# ========================================================
+# 4. SAMPAH SISTEM OPERASI (WINDOWS & MACOS)
+# ========================================================
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+.DS_Store
 
-# ==========================================
-# 5. DOKUMENTASI INTERNAL (HANYA README.MD YANG DI-UPLOAD)
-# ==========================================
+# ========================================================
+# 5. DOKUMENTASI INTERNAL
+# Hanya README publik dan dokumentasi repo yang di-upload
+# ========================================================
 *.md
 !README.md
 !readme.md
-
+!**/README.md
+!LICENSE.md
+!CONTRIBUTING.md

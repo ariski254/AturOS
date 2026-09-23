@@ -10,6 +10,8 @@ public partial class NetworkDnsView : UserControl
 {
     private readonly DnsOptimizerService _dnsService = new();
     public ObservableCollection<DnsPresetItem> Presets { get; } = new();
+    private bool _hasBenchmarkedOnce = false;
+    private bool _isBenchmarking = false;
 
     public NetworkDnsView()
     {
@@ -26,9 +28,12 @@ public partial class NetworkDnsView : UserControl
 
     private async void NetworkDnsView_Loaded(object sender, RoutedEventArgs e)
     {
+        if (_hasBenchmarkedOnce || _isBenchmarking) return;
+
         try
         {
             await RunBenchmarkAllAsync();
+            _hasBenchmarkedOnce = true;
         }
         catch (Exception ex)
         {
@@ -38,7 +43,10 @@ public partial class NetworkDnsView : UserControl
 
     private async Task RunBenchmarkAllAsync()
     {
+        if (_isBenchmarking) return;
+        _isBenchmarking = true;
         BtnBenchmarkAll.IsEnabled = false;
+
         try
         {
             foreach (var p in Presets)
@@ -53,6 +61,7 @@ public partial class NetworkDnsView : UserControl
         }
         finally
         {
+            _isBenchmarking = false;
             if (IsLoaded)
             {
                 BtnBenchmarkAll.IsEnabled = true;

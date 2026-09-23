@@ -1,4 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using AturOS.Models;
@@ -13,6 +17,9 @@ public partial class StorageCleanerView : UserControl
     private readonly HibernationService _hibernationService = new();
 
     public ObservableCollection<CleanableItem> Targets { get; } = new();
+    private bool _hasScannedOnce = false;
+    private bool _isScanning = false;
+    private CancellationTokenSource? _scanCts;
 
     public StorageCleanerView()
     {
@@ -25,11 +32,22 @@ public partial class StorageCleanerView : UserControl
         ListCleanerTargets.ItemsSource = Targets;
 
         Loaded += StorageCleanerView_Loaded;
+        Unloaded += StorageCleanerView_Unloaded;
     }
 
     private async void StorageCleanerView_Loaded(object sender, RoutedEventArgs e)
     {
         await RefreshAdvancedStorageStatusAsync();
+        // Hanya scan otomatis pertama kali saat halaman dibuka jika belum pernah discan
+        if (!_hasScannedOnce && !_isScanning)
+        {
+            await StartScanAsync(isAuto: true);
+        }
+    }
+
+    private void StorageCleanerView_Unloaded(object sender, RoutedEventArgs e)
+    {
+        _scanCts?.Cancel();
     }
 
     private async Task RefreshAdvancedStorageStatusAsync()
@@ -70,72 +88,19 @@ public partial class StorageCleanerView : UserControl
         };
     }
 
-    private async void BtnStorageSenseOn_Click(object sender, RoutedEventArgs e)
+    public async Task StartScanAsync(bool isAuto = false)
     {
-        var (success, msg) = await _cleanerService.SetStorageSenseAsync(true);
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
-    }
+        if (_isScanning) return;
+        _isScanning = true;
+        _scanCts = new CancellationTokenSource();
+        var ct = _scanCts.Token;
 
-    private async void BtnStorageSenseOff_Click(object sender, RoutedEventArgs e)
-    {
-        var (success, msg) = await _cleanerService.SetStorageSenseAsync(false);
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
-    }
-
-    private async void BtnNtfsAccessDisable_Click(object sender, RoutedEventArgs e)
-    {
-        var (success, msg) = await _cleanerService.SetNtfsLastAccessUpdateAsync(true);
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
-    }
-
-    private async void BtnNtfsAccessEnable_Click(object sender, RoutedEventArgs e)
-    {
-        var (success, msg) = await _cleanerService.SetNtfsLastAccessUpdateAsync(false);
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
-    }
-
-    private async void BtnReservedStorageOff_Click(object sender, RoutedEventArgs e)
-    {
-        var confirm = MessageBox.Show(
-            "Nonaktifkan Penyimpanan Cadangan Windows (Reserved Storage)?\n\nTindakan ini akan membebaskan hingga ~7 GB ruang disk C: yang dicadangkan oleh sistem. Memerlukan hak Administrator.",
-            "Konfirmasi Reserved Storage",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-
-        if (confirm != MessageBoxResult.Yes) return;
-
-        ProgressCard.Visibility = Visibility.Visible;
-        TxtProgressDesc.Text = "Menonaktifkan Reserved Storage via DISM...";
-
-        var (success, msg) = await _cleanerService.SetReservedStorageAsync(false);
-        ProgressCard.Visibility = Visibility.Collapsed;
-
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
-    }
-
-    private async void BtnReservedStorageOn_Click(object sender, RoutedEventArgs e)
-    {
-        ProgressCard.Visibility = Visibility.Visible;
-        TxtProgressDesc.Text = "Mengaktifkan Reserved Storage via DISM...";
-
-        var (success, msg) = await _cleanerService.SetReservedStorageAsync(true);
-        ProgressCard.Visibility = Visibility.Collapsed;
-
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
-    }
-
-    private async void BtnScan_Click(object sender, RoutedEventArgs e)
-    {
         BtnScan.IsEnabled = false;
         BtnClean.IsEnabled = false;
         ProgressCard.Visibility = Visibility.Visible;
-        TxtProgressDesc.Text = "Memindai direktori file sementara...";
+        TxtProgressDesc.Text = isAuto
+            ? "Memindai direktori file sementara secara otomatis..."
+            : "Memindai direktori file sementara...";
 
         try
         {
@@ -144,29 +109,48 @@ public partial class StorageCleanerView : UserControl
 
             foreach (var item in Targets)
             {
+                if (ct.IsCancellationRequested || !IsLoaded) break;
                 TxtProgressDesc.Text = $"Memindai {item.DisplayName}...";
                 await _cleanerService.ScanTargetAsync(item);
                 totalBytes += item.SizeBytes;
                 totalFiles += item.FileCount;
             }
 
+            if (ct.IsCancellationRequested || !IsLoaded) return;
+
+            _hasScannedOnce = true;
             BtnClean.IsEnabled = totalFiles > 0;
 
             string totalFormatted = totalBytes >= 1024L * 1024 * 1024
                 ? $"{(double)totalBytes / (1024 * 1024 * 1024):F2} GB"
                 : $"{(double)totalBytes / (1024 * 1024):F2} MB";
 
-            ShowBanner($"Pemindaian selesai: Menemukan {totalFiles} file sementara ({totalFormatted}) yang siap dibersihkan.", isError: false);
+            if (!isAuto || totalFiles > 0)
+            {
+                ShowBanner($"Pemindaian selesai: Menemukan {totalFiles} file sementara ({totalFormatted}) yang siap dibersihkan.", isError: false);
+            }
         }
         catch (Exception ex)
         {
-            ShowBanner($"Pemindaian gagal: {ex.Message}", isError: true);
+            if (!ct.IsCancellationRequested && IsLoaded)
+            {
+                ShowBanner($"Pemindaian gagal: {ex.Message}", isError: true);
+            }
         }
         finally
         {
-            ProgressCard.Visibility = Visibility.Collapsed;
-            BtnScan.IsEnabled = true;
+            _isScanning = false;
+            if (IsLoaded)
+            {
+                ProgressCard.Visibility = Visibility.Collapsed;
+                BtnScan.IsEnabled = true;
+            }
         }
+    }
+
+    private async void BtnScan_Click(object sender, RoutedEventArgs e)
+    {
+        await StartScanAsync(isAuto: false);
     }
 
     private async void BtnClean_Click(object sender, RoutedEventArgs e)
@@ -199,7 +183,7 @@ public partial class StorageCleanerView : UserControl
         {
             var result = await _cleanerService.CleanTargetsAsync(selectedTargets, progress =>
             {
-                Dispatcher.Invoke(() => TxtProgressDesc.Text = progress);
+                Dispatcher.BeginInvoke(() => TxtProgressDesc.Text = progress);
             });
 
             ShowBanner(
@@ -219,6 +203,134 @@ public partial class StorageCleanerView : UserControl
         }
     }
 
+    private async void BtnStorageSenseOn_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn) return;
+        btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _cleanerService.SetStorageSenseAsync(true);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Gagal mengubah Storage Sense: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+        }
+    }
+
+    private async void BtnStorageSenseOff_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn) return;
+        btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _cleanerService.SetStorageSenseAsync(false);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Gagal mengubah Storage Sense: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+        }
+    }
+
+    private async void BtnNtfsAccessDisable_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn) return;
+        btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _cleanerService.SetNtfsLastAccessUpdateAsync(true);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Gagal mengubah konfigurasi NTFS: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+        }
+    }
+
+    private async void BtnNtfsAccessEnable_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button btn) return;
+        btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _cleanerService.SetNtfsLastAccessUpdateAsync(false);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        catch (Exception ex)
+        {
+            ShowBanner($"Gagal mengubah konfigurasi NTFS: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+        }
+    }
+
+    private async void BtnReservedStorageOff_Click(object sender, RoutedEventArgs e)
+    {
+        var confirm = MessageBox.Show(
+            "Nonaktifkan Penyimpanan Cadangan Windows (Reserved Storage)?\n\nTindakan ini akan membebaskan hingga ~7 GB ruang disk C: yang dicadangkan oleh sistem. Memerlukan hak Administrator.",
+            "Konfirmasi Reserved Storage",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (confirm != MessageBoxResult.Yes) return;
+
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        ProgressCard.Visibility = Visibility.Visible;
+        TxtProgressDesc.Text = "Menonaktifkan Reserved Storage via DISM...";
+
+        try
+        {
+            var (success, msg) = await _cleanerService.SetReservedStorageAsync(false);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            ProgressCard.Visibility = Visibility.Collapsed;
+            if (btn != null) btn.IsEnabled = true;
+        }
+    }
+
+    private async void BtnReservedStorageOn_Click(object sender, RoutedEventArgs e)
+    {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        ProgressCard.Visibility = Visibility.Visible;
+        TxtProgressDesc.Text = "Mengaktifkan Reserved Storage via DISM...";
+
+        try
+        {
+            var (success, msg) = await _cleanerService.SetReservedStorageAsync(true);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            ProgressCard.Visibility = Visibility.Collapsed;
+            if (btn != null) btn.IsEnabled = true;
+        }
+    }
+
     private async void BtnCompactEnable_Click(object sender, RoutedEventArgs e)
     {
         var confirm = MessageBox.Show(
@@ -229,14 +341,22 @@ public partial class StorageCleanerView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         ProgressCard.Visibility = Visibility.Visible;
         TxtProgressDesc.Text = "Menjalankan compact.exe /compactos:always (mohon tunggu)...";
 
-        var (success, msg) = await _compactService.SetCompactOsAsync(true);
-        ProgressCard.Visibility = Visibility.Collapsed;
-
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _compactService.SetCompactOsAsync(true);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            ProgressCard.Visibility = Visibility.Collapsed;
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnCompactDisable_Click(object sender, RoutedEventArgs e)
@@ -249,26 +369,42 @@ public partial class StorageCleanerView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         ProgressCard.Visibility = Visibility.Visible;
         TxtProgressDesc.Text = "Menjalankan compact.exe /compactos:never...";
 
-        var (success, msg) = await _compactService.SetCompactOsAsync(false);
-        ProgressCard.Visibility = Visibility.Collapsed;
-
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _compactService.SetCompactOsAsync(false);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            ProgressCard.Visibility = Visibility.Collapsed;
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnHibernateOn_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         ProgressCard.Visibility = Visibility.Visible;
         TxtProgressDesc.Text = "Mengaktifkan hibernasi...";
 
-        var (success, msg) = await _hibernationService.SetHibernationAsync(true);
-        ProgressCard.Visibility = Visibility.Collapsed;
-
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _hibernationService.SetHibernationAsync(true);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            ProgressCard.Visibility = Visibility.Collapsed;
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnHibernateOff_Click(object sender, RoutedEventArgs e)
@@ -281,14 +417,22 @@ public partial class StorageCleanerView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         ProgressCard.Visibility = Visibility.Visible;
         TxtProgressDesc.Text = "Menonaktifkan hibernasi...";
 
-        var (success, msg) = await _hibernationService.SetHibernationAsync(false);
-        ProgressCard.Visibility = Visibility.Collapsed;
-
-        await RefreshAdvancedStorageStatusAsync();
-        ShowBanner(msg, isError: !success);
+        try
+        {
+            var (success, msg) = await _hibernationService.SetHibernationAsync(false);
+            await RefreshAdvancedStorageStatusAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            ProgressCard.Visibility = Visibility.Collapsed;
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnDismCleanup_Click(object sender, RoutedEventArgs e)
@@ -301,16 +445,24 @@ public partial class StorageCleanerView : UserControl
 
         if (confirm != MessageBoxResult.Yes) return;
 
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         ProgressCard.Visibility = Visibility.Visible;
         TxtProgressDesc.Text = "Menjalankan DISM Component Cleanup (mohon tunggu)...";
 
-        var (success, msg) = await _cleanerService.RunDismComponentCleanupAsync(p =>
+        try
         {
-            Dispatcher.Invoke(() => TxtProgressDesc.Text = p);
-        });
-
-        ProgressCard.Visibility = Visibility.Collapsed;
-        ShowBanner(msg, isError: !success);
+            var (success, msg) = await _cleanerService.RunDismComponentCleanupAsync(p =>
+            {
+                Dispatcher.BeginInvoke(() => TxtProgressDesc.Text = p);
+            });
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            ProgressCard.Visibility = Visibility.Collapsed;
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private CancellationTokenSource? _bannerCts;

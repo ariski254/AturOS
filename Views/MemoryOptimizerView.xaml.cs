@@ -187,6 +187,8 @@ public partial class MemoryOptimizerView : UserControl
 
     private async void BtnPagingExecOn_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetDisablePagingExecutiveAsync(true);
@@ -197,10 +199,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnPagingExecOff_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetDisablePagingExecutiveAsync(false);
@@ -211,10 +219,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnClearPagefileOn_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetClearPageFileAtShutdownAsync(true);
@@ -225,10 +239,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnClearPagefileOff_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetClearPageFileAtShutdownAsync(false);
@@ -239,10 +259,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnLargeCacheOn_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetLargeSystemCacheAsync(true);
@@ -253,10 +279,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnLargeCacheOff_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetLargeSystemCacheAsync(false);
@@ -267,10 +299,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnCompressionOn_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetMemoryCompressionAsync(true);
@@ -281,10 +319,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnCompressionOff_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetMemoryCompressionAsync(false);
@@ -295,10 +339,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnSysMainOn_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetSysMainStatusAsync(true);
@@ -309,10 +359,16 @@ public partial class MemoryOptimizerView : UserControl
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
         }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnSysMainOff_Click(object sender, RoutedEventArgs e)
     {
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
         try
         {
             var (success, msg) = await _memoryService.SetSysMainStatusAsync(false);
@@ -322,6 +378,10 @@ public partial class MemoryOptimizerView : UserControl
         catch (Exception ex)
         {
             ShowBanner($"Terjadi kesalahan: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
         }
     }
 

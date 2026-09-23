@@ -1,4 +1,4 @@
-<UserControl x:Class="AturOS.Views.HardwareGamingView"
+﻿<UserControl x:Class="AturOS.Views.HardwareGamingView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -7,11 +7,11 @@
              d:DesignHeight="950" d:DesignWidth="850">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="32,24,32,32">
-        <StackPanel>
+        <StackPanel HorizontalAlignment="Stretch">
             <!-- Header -->
             <Grid Margin="0,0,0,24">
                 <StackPanel>
-                    <TextBlock Text="Tuning Hardware &amp; Gaming" Style="{StaticResource PageTitleStyle}" />
+                    <TextBlock Text="Tuning Hardware &amp; Gaming" Style="{StaticResource PageTitleStyle}" TextTrimming="CharacterEllipsis" />
                     <TextBlock Text="Optimasi tingkat rendah untuk latensi prosesor, grafis GPU, memori kernel, input mouse/keyboard, dan jaringan gaming."
                                Style="{StaticResource PageSubtitleStyle}" />
                 </StackPanel>
@@ -22,7 +22,7 @@
                     BorderThickness="1" CornerRadius="8" Padding="16,12" Margin="0,0,0,20" Visibility="Collapsed">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" MinWidth="180" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="TxtBanner" Foreground="{StaticResource BrushTextPrimary}" FontSize="13" VerticalAlignment="Center" TextWrapping="Wrap" />
@@ -37,7 +37,7 @@
                 <StackPanel>
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -51,24 +51,24 @@
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                             <TextBlock Text="Hardware-Accelerated GPU Scheduling (HAGS)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                             <TextBlock Text="Mungkinkan GPU mengelola alokasi VRAM secara mandiri untuk memangkas latensi render frame." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Aktifkan (ON)" Margin="0,0,8,0" Click="BtnHagsOn_Click" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Nonaktifkan" Click="BtnHagsOff_Click" />
-                        </StackPanel>
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Aktifkan (ON)" Margin="0,2,8,2" Click="BtnHagsOn_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Nonaktifkan" Margin="0,2,0,2" Click="BtnHagsOff_Click" />
+                        </WrapPanel>
                     </Grid>
 
                     <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -82,17 +82,17 @@
 
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                             <TextBlock Text="Prioritas Penjadwalan GPU untuk Game" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                             <TextBlock Text="Alokasikan prioritas rendering GPU dan thread scheduler multimedia ke tingkat High khusus proses game." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Prioritas Maksimum" Margin="0,0,8,0" Click="BtnGpuPriorityOn_Click" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default" Click="BtnGpuPriorityOff_Click" />
-                        </StackPanel>
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Prioritas Maksimum" Margin="0,2,8,2" Click="BtnGpuPriorityOn_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default" Margin="0,2,0,2" Click="BtnGpuPriorityOff_Click" />
+                        </WrapPanel>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -103,41 +103,41 @@
                 <StackPanel>
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                             <TextBlock Text="Skema Daya Kinerja Maksimal (Ultimate Performance)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                             <TextBlock Text="Aktifkan skema daya tersembunyi Windows yang menghilangkan micro-latency dan mencegah CPU masuk mode hemat saat bekerja." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource PrimaryButton}" Height="34" Content="Aktifkan Ultimate" Margin="0,0,8,0" Click="BtnPowerUltimate_Click" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Balanced" Click="BtnPowerBalanced_Click" />
-                        </StackPanel>
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource PrimaryButton}" Height="34" Content="Aktifkan Ultimate" Margin="0,2,8,2" Click="BtnPowerUltimate_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Balanced" Margin="0,2,0,2" Click="BtnPowerBalanced_Click" />
+                        </WrapPanel>
                     </Grid>
 
                     <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                             <TextBlock Text="Prioritas Penjadwalan CPU Aplikasi Aktif (Win32PrioritySeparation)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                             <TextBlock Text="Berikan jatah siklus quantum CPU terbesar kepada jendela program atau game yang sedang aktif di depan." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Prioritas Depan (38)" Margin="0,0,8,0" Click="BtnCpuPriorityOn_Click" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default (2)" Click="BtnCpuPriorityOff_Click" />
-                        </StackPanel>
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Prioritas Depan (38)" Margin="0,2,8,2" Click="BtnCpuPriorityOn_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default (2)" Margin="0,2,0,2" Click="BtnCpuPriorityOff_Click" />
+                        </WrapPanel>
                     </Grid>
 
                     <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -151,7 +151,7 @@
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -165,7 +165,7 @@
 
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -182,17 +182,17 @@
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,24">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" MinWidth="180" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                         <TextBlock Text="Disable Paging Executive" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                         <TextBlock Text="Paksa seluruh modul kernel dan driver sistem operasi tetap berada di RAM fisik murni tanpa dialihkan ke pagefile disk." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Aktifkan (Lock RAM)" Margin="0,0,8,0" Click="BtnPagingExecOn_Click" />
-                        <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Standar (Pagefile)" Click="BtnPagingExecOff_Click" />
-                    </StackPanel>
+                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Aktifkan (Lock RAM)" Margin="0,2,8,2" Click="BtnPagingExecOn_Click" />
+                        <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Standar (Pagefile)" Margin="0,2,0,2" Click="BtnPagingExecOff_Click" />
+                    </WrapPanel>
                 </Grid>
             </Border>
 
@@ -202,7 +202,7 @@
                 <StackPanel>
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -216,24 +216,24 @@
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                             <TextBlock Text="Nonaktifkan Network Throttling Index" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                             <TextBlock Text="Hapus pembatasan packet throttling Windows multimedia untuk throughput throughput bandwidth jaringan 100% penuh." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Bebaskan Limit" Margin="0,0,8,0" Click="BtnNetworkThrottlingOff_Click" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default" Click="BtnNetworkThrottlingOn_Click" />
-                        </StackPanel>
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Bebaskan Limit" Margin="0,2,8,2" Click="BtnNetworkThrottlingOff_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default" Margin="0,2,0,2" Click="BtnNetworkThrottlingOn_Click" />
+                        </WrapPanel>
                     </Grid>
 
                     <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -247,7 +247,7 @@
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -261,7 +261,7 @@
 
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -279,24 +279,24 @@
                 <StackPanel>
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                             <TextBlock Text="Respon Menu &amp; UI Instan (MenuShowDelay = 0)" FontWeight="SemiBold" FontSize="14.5" Foreground="{StaticResource BrushTextPrimary}" />
                             <TextBlock Text="Hilangkan jeda 400ms saat membuka menu konteks klik-kanan dan sub-menu untuk navigasi desktop super cepat." FontSize="12" Foreground="{StaticResource BrushTextSecondary}" Margin="0,3,0,0" TextWrapping="Wrap" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Instan (0 ms)" Margin="0,0,8,0" Click="BtnMenuDelayZero_Click" />
-                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default (400 ms)" Click="BtnMenuDelayDefault_Click" />
-                        </StackPanel>
+                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Instan (0 ms)" Margin="0,2,8,2" Click="BtnMenuDelayZero_Click" />
+                            <Button Style="{StaticResource SecondaryButton}" Height="34" Content="Default (400 ms)" Margin="0,2,0,2" Click="BtnMenuDelayDefault_Click" />
+                        </WrapPanel>
                     </Grid>
 
                     <Separator Background="{StaticResource BrushBorder}" Margin="0,0,0,14" />
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -310,7 +310,7 @@
 
                     <Grid Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
@@ -324,7 +324,7 @@
 
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="180" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">

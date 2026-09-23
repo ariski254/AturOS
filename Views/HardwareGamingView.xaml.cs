@@ -16,163 +16,397 @@ public partial class HardwareGamingView : UserControl
 
     private async void BtnCleanShader_Click(object sender, RoutedEventArgs e)
     {
-        var (freed, count) = await _tuningService.CleanShaderCacheAsync();
-        string sizeText = freed >= 1024L * 1024
-            ? $"{(double)freed / (1024 * 1024):F1} MB"
-            : $"{freed / 1024} KB";
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (freed, count) = await _tuningService.CleanShaderCacheAsync();
+            string sizeText = freed >= 1024L * 1024
+                ? $"{(double)freed / (1024 * 1024):F1} MB"
+                : $"{freed / 1024} KB";
 
-        ShowBanner($"Pembersihan Shader Cache selesai: {count} file dihapus ({sizeText} dibebaskan).", isError: false);
+            ShowBanner($"Pembersihan Shader Cache selesai: {count} file dihapus ({sizeText} dibebaskan).", isError: false);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnHagsOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetHagsAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetHagsAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnHagsOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetHagsAsync(false);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetHagsAsync(false);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnTweakGpu_Click(object sender, RoutedEventArgs e)
     {
-        await _tuningService.DisableGameDvrAsync(true);
-        var (s2, m2) = await _tuningService.OptimizeTdrDelayAsync();
-        ShowBanner($"Xbox Game DVR dimatikan. {m2}", isError: false);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            await _tuningService.DisableGameDvrAsync(true);
+            var (s2, m2) = await _tuningService.OptimizeTdrDelayAsync();
+            ShowBanner($"Xbox Game DVR dimatikan. {m2}", isError: false);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnDisableCoreParking_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.DisableCoreParkingAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.DisableCoreParkingAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnDisableDynamicTick_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.DisableDynamicTickAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.DisableDynamicTickAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnDisableThrottling_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.DisablePowerThrottlingAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.DisablePowerThrottlingAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnPagingExecOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetDisablePagingExecutiveAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetDisablePagingExecutiveAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnPagingExecOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetDisablePagingExecutiveAsync(false);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetDisablePagingExecutiveAsync(false);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnTcpNoDelay_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.DisableNagleAlgorithmAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.DisableNagleAlgorithmAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnEnableTrim_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.EnableSsdTrimAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.EnableSsdTrimAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnDisableNtfs83_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.DisableNtfs8Dot3Async();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.DisableNtfs8Dot3Async();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnFlushDns_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.FlushDnsAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.FlushDnsAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnDisableMouseAccel_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.DisableMouseAccelerationAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.DisableMouseAccelerationAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnMaxKeyboard_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.MaximizeKeyboardResponseAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.MaximizeKeyboardResponseAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnDisableStickyKeys_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.DisableStickyKeysPopupAsync();
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.DisableStickyKeysPopupAsync();
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnGpuPriorityOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetGpuPrioritySchedulingAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetGpuPrioritySchedulingAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnGpuPriorityOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetGpuPrioritySchedulingAsync(false);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetGpuPrioritySchedulingAsync(false);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnPowerUltimate_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetUltimatePerformanceAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetUltimatePerformanceAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnPowerBalanced_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetUltimatePerformanceAsync(false);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetUltimatePerformanceAsync(false);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnCpuPriorityOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetWin32PrioritySeparationAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetWin32PrioritySeparationAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnCpuPriorityOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetWin32PrioritySeparationAsync(false);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetWin32PrioritySeparationAsync(false);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnNetworkThrottlingOff_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetNetworkThrottlingAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetNetworkThrottlingAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnNetworkThrottlingOn_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetNetworkThrottlingAsync(false);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetNetworkThrottlingAsync(false);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnMenuDelayZero_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetMenuShowDelayAsync(true);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetMenuShowDelayAsync(true);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private async void BtnMenuDelayDefault_Click(object sender, RoutedEventArgs e)
     {
-        var (success, msg) = await _tuningService.SetMenuShowDelayAsync(false);
-        ShowBanner(msg, isError: !success);
+        var btn = sender as Button;
+        if (btn != null) btn.IsEnabled = false;
+        try
+        {
+            var (success, msg) = await _tuningService.SetMenuShowDelayAsync(false);
+            ShowBanner(msg, isError: !success);
+        }
+        finally
+        {
+            if (btn != null) btn.IsEnabled = true;
+        }
     }
 
     private CancellationTokenSource? _bannerCts;

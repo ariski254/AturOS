@@ -1,116 +1,247 @@
-<p align="center">
-  <img src="Resources/logo.png" alt="AturOS Logo" width="96" height="96" />
-</p>
+﻿# AturOS
 
-<h1 align="center">AturOS</h1>
+**Utilitas Optimasi Windows Native — Portabel, Ringan, dan Berfungsi Nyata**
 
-<p align="center">
-  <strong>Utilitas Desktop Native Modern untuk Optimasi, Debloat, dan Kustomisasi Windows 10 &amp; Windows 11</strong>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D4?style=for-the-badge&logo=windows" alt="Windows" />
-  <img src="https://img.shields.io/badge/Architecture-x64-2563EB?style=for-the-badge" alt="x64" />
-  <img src="https://img.shields.io/badge/Aplikasi-Portable%20%2F%20Single--File-16A34A?style=for-the-badge" alt="Portable Single File" />
-  <img src="https://img.shields.io/badge/Tampilan-Clean%20Fluent%20WPF-0F172A?style=for-the-badge" alt="Fluent WPF" />
-</p>
+AturOS adalah aplikasi desktop utilitas native untuk **Windows 10** dan **Windows 11** yang membantu pengguna membersihkan, mengoptimalkan, dan menyesuaikan sistem operasi mereka secara aman melalui antarmuka yang modern dan mudah digunakan. Seluruh operasi berinteraksi langsung dengan Windows API, tidak ada simulasi atau tampilan palsu.
 
 ---
 
-## 🚀 Download & Cara Pakai
+## Persyaratan Sistem
 
-Aplikasi AturOS didistribusikan dalam bentuk **1 file siap pakai (`AturOS.exe`)**. Anda **tidak perlu menginstal .NET Runtime** dan **tidak perlu melakukan instalasi (Portable)**.
-
-### 1. Unduh Aplikasi
-Silakan unduh file aplikasi versi terbaru melalui tautan berikut:
-
-👉 [**Download AturOS.exe (Halaman Releases)**](https://github.com/ariski254/AturOS/releases)
-
-### 2. Cara Menjalankan
-1. Klik ganda pada file `AturOS.exe` yang telah diunduh.
-2. Saat muncul jendela konfirmasi hak akses Administrator (UAC), pilih **Yes** *(diperlukan agar AturOS dapat berinteraksi langsung dengan sistem Windows, membersihkan file, dan mengatur registri)*.
-3. AturOS langsung terbuka dan siap digunakan!
-
-> [!TIP]
-> **100% Portabel:** Anda dapat meletakkan dan menjalankan file `AturOS.exe` langsung dari Desktop, Folder Download, maupun Flashdisk tanpa memerlukan folder file pendukung lainnya.
+| Komponen | Persyaratan Minimum |
+|---|---|
+| Sistem Operasi | Windows 10 (Build 19041+) atau Windows 11 |
+| Arsitektur | x64 (64-bit) |
+| RAM | 256 MB tersedia |
+| Penyimpanan | 80 MB ruang kosong |
+| Hak Akses | Administrator (diperlukan untuk sebagian besar fitur) |
+| Runtime | Tidak diperlukan — sudah terpaket dalam satu berkas |
 
 ---
 
-## ✨ Penjelasan Fitur
+## Cara Menjalankan
 
-### 1. 📊 Ringkasan Sistem Real-Time (Dashboard)
-* **Pantau Sumber Daya**: Membaca penggunaan CPU, pembagian kapasitas memori RAM (Terpakai, Bebas, Persentase), dan sisa penyimpanan drive C: secara langsung tanpa lag.
-* **3 Profil Performa 1-Klik**:
-  * 🌱 **Mode Seimbang (Daily Balance)**: Skema daya seimbang, animasi normal, hemat energi saat santai.
-  * 💼 **Mode Kerja & Produktivitas**: Skema daya kerja dengan auto-trim RAM di latar belakang dan Focus Assist.
-  * ⚡ **Mode Gaming (Extreme Latency & FPS)**: Skema daya *Ultimate Performance*, matikan CPU Core Parking, dan respon input instan.
-* **Aksi Cepat**: Optimalkan RAM seketika, bersihkan file sementara, dan bersihkan riwayat clipboard.
+AturOS didistribusikan sebagai **Portable Single-File Executable** — tidak perlu instalasi.
 
-### 2. 🪶 Mode Windows Lite (Pangkas Beban Sistem Berjenjang)
-* **Tingkat 1 (Mode Ringan)**: Menghapus bloatware sponsor bawaan Windows (TikTok, Spotify, Candy Crush, Disney+), mematikan telemetri pelacak `DiagTrack`, widget taskbar, dan iklan Start Menu (~400–700 MB RAM dibebaskan).
-* **Tingkat 2 (Mode Seimbang)**: Seluruh optimasi Tingkat 1 + mencopot aplikasi UWP sekunder (Cuaca, Berita, Peta, Solitaire), mematikan Cortana & Copilot, serta mematikan servis `SysMain` & `WSearch` (~1.2–2.0 GB RAM dibebaskan).
-* **Tingkat 3 (Mode Ekstrem - Barebone)**: Pangkas tuntas beban sistem untuk PC spek rendah dan gaming kompetitif. Mencopot Microsoft Edge & Edge Update, mengaktifkan kompresi sistem *CompactOS*, mematikan hibernasi, dan menyisakan hanya aplikasi esensial (~2.5–3.5+ GB RAM dibebaskan).
-* **Fitur Pemulihan (Revert)**: 1-klik untuk mengembalikan seluruh servis, efek visual, dan setelan ke kondisi bawaan pabrik Windows.
+1. Klik ganda pada **`AturOS.exe`**.
+2. Saat jendela **User Account Control (UAC)** muncul, klik **Ya**.
+3. Jendela utama AturOS langsung terbuka dan siap digunakan.
 
-### 3. 📦 Semua Aplikasi Terinstall (App Debloater)
-* **Pindai Menyeluruh**: Menampilkan seluruh aplikasi yang terpasang di komputer Anda, baik aplikasi desktop klasik (**Win32 / x64 / x86**) maupun aplikasi modern (**UWP / Windows Store**).
-* **Pencarian & Filter Cepat**: Cari nama aplikasi secara instan atau filter berdasarkan kategori.
-* **Copot Bersih**: Menjalankan proses uninstaller resmi aplikasi atau pencopotan paket sistem secara aman.
+> **Catatan:** Hak Administrator diperlukan agar AturOS dapat berinteraksi dengan komponen sistem Windows secara langsung, seperti membersihkan file terproteksi, mengubah konfigurasi registri, dan mengelola layanan Windows.
 
-### 4. 🧹 Pembersih Drive (Storage Cleaner)
-* **Pembersihan File Sampah**: Memindai dan menghapus berkas sementara di `%TEMP%`, `C:\Windows\Temp`, `SoftwareDistribution\Download`, `Prefetch`, Crash Dumps, Thumbnails, dan log sistem lama.
-* **Kompresi Sistem (CompactOS)**: Mengaktifkan kompresi biner sistem Windows (`compact.exe /compactos:always`) untuk menghemat 3–5 GB ruang penyimpanan.
-* **Manajemen Hibernasi**: Matikan file hibernasi `hiberfil.sys` untuk membebaskan ruang disk sebesar kapasitas RAM fisik Anda.
-* **Penyimpanan Cadangan (Reserved Storage)**: Bebaskan ~7 GB ruang disk yang dicadangkan oleh Windows Update.
-* **Penyimpanan Pintar (Storage Sense) & NTFS Last Access**: Otomasi pembersihan ruang dan pengurangan beban penulisan I/O untuk memperpanjang umur SSD.
+---
 
-### 5. ⚡ Optimasi RAM Mendalam
-* **Bebaskan RAM Sekarang**: Memangkas alokasi working set proses yang idle menggunakan Windows API native tanpa mematikan aplikasi secara paksa.
-* **Bersihkan Standby List & Cache**: Mengosongkan cache memori standby sistem yang menumpuk.
-* **Kunci Kernel di RAM Fisik (`DisablePagingExecutive`)**: Memaksa modul kernel dan driver tetap berada di RAM fisik agar respon sistem tidak terhambat oleh kecepatan disk.
-* **Bersihkan Pagefile saat Shutdown**: Menghapus residu memori virtual saat komputer dimatikan.
-* **Kompresi Memori Windows (MMAgent)**: Atur kompresi memori untuk menghemat RAM (PC spek rendah) atau menghemat siklus prosesor CPU (PC gaming).
+## Panduan Fitur
 
-### 6. 🎮 Tuning Hardware & Gaming
-* **Skema Daya Ultimate Performance**: Mengaktifkan profil performa tertinggi Windows tanpa batasan throttling daya.
-* **Prioritas CPU Aplikasi Aktif (`Win32PrioritySeparation`)**: Nilai optimal `38` (`0x26`) untuk alokasi siklus prosesor maksimum pada game atau software yang sedang aktif.
-* **Respon Menu Instan (`MenuShowDelay`)**: Menghilangkan jeda bawaan 400ms Windows saat membuka klik-kanan dan menu menjadi `0 ms`.
-* **Prioritas GPU & Latensi Jaringan**: Optimasi alokasi scheduler task GPU (`Games`), bebaskan Network Throttling Index, dan matikan algoritma Nagle (TCPNoDelay).
-* **Respon Input 1:1**: Nonaktifkan akselerasi mouse Windows untuk presisi bidikan murni dan maksimalkan responsivitas ketikan keyboard.
+### 1. 📊 Ringkasan Sistem (Dashboard)
 
-### 7. 🩺 Dokter Sistem & Auto-Repair
-* **Integritas Berkas (SFC & Auto-DISM)**: Menjalankan pemindaian `sfc /scannow`. Jika ditemukan kerusakan komponen yang gagal diperbaiki oleh SFC, otomatis menjalankan pemulihan citra komponen via `dism /Online /Cleanup-Image /RestoreHealth`.
-* **Troubleshooter Windows Update**: 1-klik mereset folder antrian `SoftwareDistribution` dan `Catroot2` serta merestart layanan update yang macet.
-* **Perbaikan Tumpukan Jaringan**: Reset Winsock, reset TCP/IP stack, dan pembersihan DNS cache untuk mengatasi internet bermasalah.
-* **Pemeriksa Dependensi (.DLL Missing)**: Mendeteksi dan memasang pustaka runtime esensial (Visual C++ 2015–2022, DirectX, dan .NET Runtime) dengan 1-klik.
-* **Pembersih Shortcut Rusak & Registry Bekas**: Memindai file `.lnk` yang targetnya telah dihapus dan membersihkan sisa entri uninstaller registry lama.
+Menampilkan informasi kondisi sistem secara **real-time** yang diperbarui otomatis setiap beberapa detik:
 
-### 8. 🌐 Pengoptimal Jaringan & DNS
-* **1-Click DNS Switcher**: Beralih ke DNS cepat dan aman dengan pilihan preset terpercaya:
-  * Cloudflare DNS (`1.1.1.1` & `1.0.0.1`)
-  * Google Public DNS (`8.8.8.8` & `8.8.4.4`)
-  * AdGuard DNS (`94.140.14.14` & `94.140.15.15`) — Blokir Iklan & Pelacak
-  * Quad9 DNS (`9.9.9.9` & `149.112.112.112`) — Keamanan Malware
-* **Tes Latensi DNS**: Mengukur kecepatan respon ping real-time untuk memilih server DNS tercepat untuk koneksi Anda.
-* **Kembalikan ke DHCP**: 1-klik mereset DNS kembali ke setelan otomatis bawaan router / ISP.
+- **CPU** — Persentase beban prosesor aktual dari seluruh core menggunakan Performance Counter Windows.
+- **RAM** — Memori total, terpakai, dan bebas menggunakan API `GlobalMemoryStatusEx`.
+- **Penyimpanan C:** — Kapasitas, ruang terpakai, dan ruang kosong menggunakan `DriveInfo`.
+- **Informasi Perangkat** — Nama OS, Build Windows, nama komputer, pengguna aktif, arsitektur, dan uptime.
 
-### 9. 📁 Kustomisasi Shell & File Explorer
-* **Menu Konteks Klasik Windows 11**: Mengembalikan menu klik-kanan klasik Windows 10 tanpa submenu "Show more options".
-* **Tampilkan Ekstensi & File Tersembunyi**: Menampilkan ekstensi file dan folder tersembunyi secara permanen.
-* **Hapus Teks "- Shortcut"**: Menghilangkan imbuhan kata saat membuat pintasan baru.
-* **Pintasan Praktis**: Menambahkan opsi *Take Ownership* dan *Buka Terminal sebagai Administrator* pada klik-kanan berkas dan folder.
+**3 Profil Performa Cepat:**
 
-### 10. 🛡️ Kontrol Windows Update
-* **Pilihan Mode Kontrol**:
-  * **Hentikan Total (Hard Lockdown)**: Mematikan seluruh servis update dan Task Scheduler otomatis.
-  * **Jeda Jangka Panjang (Hingga 2099)**: Menjeda pembaruan Windows tanpa merusak fungsionalitas Microsoft Store.
-  * **Mode Patch Keamanan Saja**: Hanya mengizinkan unduhan update keamanan penting tanpa update fitur besar yang berat.
-  * **Kembalikan ke Default**: Mengembalikan seluruh setelan update ke standar bawaan Windows.
+| Profil | Deskripsi |
+|---|---|
+| Seimbang (Harian) | Mode standar untuk pemakaian sehari-hari, hemat daya |
+| Kerja & Produktif | Auto-trim RAM idle + mode hening latar belakang |
+| Gaming (Performa Maksimal) | Skema daya Ultimate Performance + optimasi latensi |
 
-### 11. 🚀 Pemasang Aplikasi Massal (Winget GUI)
-* Memasang software esensial (7-Zip, Notepad++, Git, Google Chrome, Brave, Discord, Steam, OBS Studio, PowerToys, dll.) secara otomatis tanpa iklan atau installer manual melalui antarmuka visual terintegrasi `winget`.
+**Tombol Tindakan Cepat (Header Bar):**
+- **Restart Explorer** — Memuat ulang shell Windows tanpa restart penuh.
+- **Bunuh Task Macet** — Menutup paksa semua proses Not-Responding sekaligus.
+- **Buat Restore Point** — Membuat System Restore Point Windows sebelum perubahan besar.
 
-### 12. 🔒 Backup & Restore
-* **System Restore Point**: Membuat titik pemulihan sistem Windows via PowerShell `Checkpoint-Computer` sebelum menerapkan perubahan besar.
-* **Buka Wizard Pemulihan**: Peluncur 1-klik untuk membuka wizard pemulihan resmi Windows (`rstrui.exe`).
-* **Cadangan Registri (.reg)**: Ekspor dan simpan backup konfigurasi registri ke folder cadangan lokal.
+---
+
+### 2. Profil Performa (Mode Windows)
+
+Penerapan tweak sistem secara terkelompok berdasarkan kebutuhan dan spesifikasi perangkat keras:
+
+- **Tier Perangkat Keras** — AturOS mendeteksi otomatis spesifikasi RAM dan Storage Anda lalu merekomendasikan profil yang sesuai.
+- **Profil Harian** — Menonaktifkan iklan Start Menu, jeda animasi berlebihan, dan membersihkan bloatware sponsor.
+- **Profil Kerja** — Tambahan: menonaktifkan Cortana, Copilot, widget taskbar, dan SysMain (SuperFetch).
+- **Profil Gaming** — Tambahan: mengaktifkan Ultimate Performance Plan, menonaktifkan CPU Core Parking, dan menghapus telemetri.
+- **Profil Barebone (Ekstrem)** — Untuk PC spesifikasi rendah: mengaktifkan CompactOS, menghapus Edge, dan mematikan hibernasi.
+
+Setiap profil dilengkapi tombol **"Kembalikan ke Standar"** untuk restore ke kondisi awal Windows.
+
+---
+
+### 3. Pencopot Aplikasi (App Debloater)
+
+Menampilkan dan menghapus seluruh aplikasi yang terpasang — baik aplikasi **Win32 desktop** maupun **UWP/Microsoft Store** — dengan penanganan khusus untuk aplikasi terproteksi sistem:
+
+| Aplikasi | Mekanisme Penanganan |
+|---|---|
+| Microsoft Edge | Membuka kunci registri NoRemove, menjalankan uninstaller resmi, mengunci registry agar tidak diunduh ulang |
+| Microsoft OneDrive | Menghentikan proses, menjalankan uninstaller bawaan, membersihkan autostart, menghapus pintasan Explorer |
+| Aplikasi "Diproteksi Windows" | Mencabut paket Provisioning sistem, melucuti background activity dan scheduled tasks |
+| UWP Bawaan Lainnya | Dihapus via Remove-AppxPackage atau Remove-AppxProvisionedPackage |
+
+Fitur pencarian dan filter kategori tersedia untuk menemukan aplikasi dengan cepat.
+
+---
+
+### 4. Pembersih Drive (Storage Cleaner)
+
+Menemukan dan menghapus berkas sampah yang aman untuk dibersihkan:
+
+**Target Pembersihan:**
+- `%TEMP%` — Berkas sementara pengguna
+- `C:\Windows\Temp` — Berkas sementara sistem
+- `C:\Windows\SoftwareDistribution\Download` — Cache unduhan Windows Update
+
+Proses berjalan dengan alur **Scan → Hitung Ukuran → Tampilkan Hasil → Konfirmasi → Bersihkan**.
+
+**Fitur Tambahan Manajemen Penyimpanan:**
+- **CompactOS** — Mengompres binari sistem Windows untuk menghemat 3–5 GB ruang disk.
+- **Hibernasi** — Mengaktifkan/menonaktifkan hiberfil.sys (membebaskan ruang sebesar kapasitas RAM).
+- **Storage Sense** — Mengaktifkan kebijakan pembersihan otomatis bawaan Windows.
+- **NTFS Last Access Time** — Menonaktifkan pencatatan waktu akses berkas untuk mempercepat I/O.
+- **Reserved Storage** — Mengelola ruang cadangan Windows Update.
+
+---
+
+### 5. Optimasi RAM (Memory Optimizer)
+
+Menggunakan Windows API resmi melalui P/Invoke untuk memangkas memori tanpa mematikan aplikasi:
+
+- **Bebaskan RAM Sekarang** — Memanggil `EmptyWorkingSet` pada seluruh proses aktif yang memenuhi syarat.
+- **Kosongkan Standby List** — Membersihkan daftar standby page via `NtSetSystemInformation`.
+
+**Tweak Memori Lanjutan:** Paging Executive, Clear Pagefile, Large System Cache, Memory Compression, SysMain.
+
+---
+
+### 6. Tuning Hardware & Gaming
+
+Tweak resmi berbasis Registry Windows untuk meningkatkan responsivitas:
+
+| Tweak | Manfaat |
+|---|---|
+| Hardware-Accelerated GPU Scheduling (HAGS) | Mengurangi latensi render GPU |
+| GPU Process Priority | Memprioritaskan antrian GPU untuk aplikasi foreground |
+| Ultimate Performance Plan | Menonaktifkan CPU Core Parking dan pembatasan frekuensi |
+| Win32PrioritySeparation | Meningkatkan prioritas penjadwalan proses foreground |
+| Network Throttling | Menghapus batas bandwidth jaringan untuk game |
+| MenuShowDelay | Menghilangkan jeda 400ms pada menu klik-kanan |
+
+---
+
+### 7. Dokter Sistem (System Doctor)
+
+- **SFC Scannow** — Memindai dan memperbaiki berkas sistem Windows yang hilang atau rusak.
+- **DISM Restore Health** — Memperbaiki komponen citra Windows menggunakan sumber dari Windows Update.
+- **Pemeriksa Shortcut Rusak** — Menemukan dan membersihkan shortcut yang mengarah ke berkas tidak valid.
+- **Pembersih Registry Orphan** — Menemukan entri registry yang mengarah ke program yang sudah dihapus.
+
+---
+
+### 8. Pengoptimal Jaringan & DNS
+
+Mengganti server DNS adaptor jaringan aktif ke penyedia tercepat dalam satu klik:
+
+| Penyedia DNS | Keunggulan |
+|---|---|
+| Cloudflare (1.1.1.1) | Tercepat secara global, privasi tinggi |
+| Google (8.8.8.8) | Andal dan stabil |
+| AdGuard DNS | Pemblokir iklan dan tracker |
+| Quad9 (9.9.9.9) | Pemblokir domain berbahaya |
+| OpenDNS | Proteksi phishing dan kontrol parental |
+
+Fitur **Uji Latensi Ping** tersedia untuk mengukur respons tiap server sebelum memilih.
+
+---
+
+### 9. Kontrol Windows Update
+
+- **Jeda Pembaruan** — Menangguhkan update otomatis dalam jangka panjang.
+- **Mode Keamanan Saja** — Hanya mengizinkan patch keamanan penting, menolak feature update.
+- **Driver Update** — Mengontrol apakah Windows Update diizinkan mengunduh driver.
+- **Reset Update** — Menghapus antrian update yang gagal atau tertunda.
+
+---
+
+### 10. Kustomisasi Shell & File Explorer
+
+Tweak tampilan dan perilaku Windows Explorer via Registry:
+
+- Tampilkan/Sembunyikan ekstensi nama file
+- Tampilkan/Sembunyikan hidden files dan folder
+- Hapus akhiran "- Shortcut" pada ikon baru
+- Tambah menu klik-kanan "Take Ownership"
+- Nonaktifkan pop-up Security Warning saat membuka installer
+- Kembalikan menu konteks klasik Windows 10 (khusus Windows 11)
+- Tambah menu "Buka Terminal sebagai Administrator"
+- Nonaktifkan pencarian Bing di Start Menu
+
+---
+
+### 11. Pemasang Aplikasi Massal (Winget Installer)
+
+Memasang kumpulan aplikasi penting secara otomatis menggunakan **Windows Package Manager (winget)**. Tersedia kategori: Runtime, Peramban, Developer Tools, Media & Gaming, Utilitas Sistem. Pengguna dapat memilih dan memasang banyak aplikasi sekaligus tanpa iklan.
+
+---
+
+### 12. Alat Darurat & Pemeliharaan
+
+- **Tutup Paksa Aplikasi Membeku** — Menutup seketika semua proses Not-Responding.
+- **Restart Windows Explorer** — Memuat ulang shell Windows.
+- **Bersihkan Clipboard** — Menghapus konten dari buffer clipboard.
+- **Laporan Baterai Laptop** — Laporan kesehatan baterai lengkap dalam format HTML.
+- **Aksi Tutup Layar (Lid Close)** — Mengatur perilaku saat laptop ditutup.
+- **Boot ke Safe Mode** — Mengatur bcdedit agar restart berikutnya masuk Safe Mode.
+- **Pembersih Ghost Devices** — Menghapus entri driver perangkat keras lama dari Device Manager.
+- **SFC & DISM** — Perbaikan integritas berkas sistem satu klik.
+
+---
+
+### 13. Cadangan & Pemulihan (Backup & Restore)
+
+- **Buat System Restore Point** — Membuat titik pemulihan via PowerShell `Checkpoint-Computer`.
+- **Daftar Restore Point** — Menampilkan semua titik pemulihan tersimpan dengan opsi pemulihan langsung.
+- **Ekspor Cadangan Registry (.reg)** — Menyimpan konfigurasi registry penting ke file `.reg`.
+- **Kelola Berkas Cadangan** — Melihat, membuka, memulihkan, atau menghapus file cadangan.
+- **Buka Wizard Pemulihan (rstrui)** — Membuka antarmuka System Restore bawaan Windows.
+
+---
+
+## Pertanyaan Umum (FAQ)
+
+**Q: Muncul peringatan SmartScreen "Windows protected your PC"?**
+A: Normal terjadi pada aplikasi yang belum memiliki sertifikat digital berbayar. Klik **"More info"** → **"Run anyway"**. AturOS bersih dari malware dan tidak mengandung iklan pihak ketiga.
+
+**Q: Apakah aman untuk PC gaming dengan anti-cheat (Vanguard, EAC, BattlEye)?**
+A: Aman. AturOS tidak menyuntikkan kode ke proses manapun. Seluruh optimasi menggunakan konfigurasi resmi Windows yang didokumentasikan Microsoft.
+
+**Q: Bagaimana membatalkan perubahan yang telah diterapkan?**
+A: Gunakan tombol **"Kembalikan ke Default"** yang tersedia di setiap baris tweak. Untuk pemulihan menyeluruh, buka **Cadangan & Pemulihan** → jalankan **Wizard Pemulihan Sistem**.
+
+**Q: Mengapa beberapa fitur tidak tersedia di Windows 10?**
+A: Fitur seperti Menu Konteks Klasik, Copilot, dan Widgets hanya tersedia di Windows 11. AturOS mendeteksi versi OS secara otomatis dan menampilkan status **"Tidak Didukung"** untuk fitur yang tidak kompatibel.
+
+**Q: Apakah data pribadi dikumpulkan?**
+A: Tidak. AturOS berjalan sepenuhnya offline. Tidak ada koneksi ke server eksternal, tidak ada pengiriman data, tidak ada telemetri.
+
+---
+
+## Informasi Teknis
+
+| Item | Detail |
+|---|---|
+| Bahasa Pemrograman | C# (.NET 8) |
+| Framework UI | WPF (Windows Presentation Foundation) |
+| Desain UI | Fluent Light / Windows 11 Clean UI |
+| Distribusi | Portable Single-File Executable |
+| Target Platform | Windows 10/11, x64 |
+| Ukuran Berkas | ~75 MB (self-contained) |
+
+---
+
+## Repositori
+
+**https://github.com/ariski254/AturOS**

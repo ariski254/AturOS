@@ -7,22 +7,22 @@
              d:DesignHeight="650" d:DesignWidth="850">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="32,24,32,32">
-        <StackPanel>
+        <StackPanel HorizontalAlignment="Stretch">
             <!-- Header -->
             <Grid Margin="0,0,0,24">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" MinWidth="180" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="Ringkasan Sistem" Style="{StaticResource PageTitleStyle}" />
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <TextBlock Text="Ringkasan Sistem" Style="{StaticResource PageTitleStyle}" TextTrimming="CharacterEllipsis" />
                     <TextBlock Text="Pantau performa CPU, memori RAM, dan kapasitas penyimpanan secara real-time."
                                Style="{StaticResource PageSubtitleStyle}" />
                 </StackPanel>
 
                 <!-- Quick Action Button -->
-                <Button Grid.Column="1" Style="{StaticResource PrimaryButton}" Height="36" Click="BtnOptimizeNow_Click"
-                        ToolTip="Bersihkan memori dan file sampah sementara">
+                <Button x:Name="BtnOptimizeNow" Grid.Column="1" Style="{StaticResource PrimaryButton}" Height="36" Click="BtnOptimizeNow_Click"
+                        ToolTip="Bersihkan memori dan file sampah sementara" VerticalAlignment="Top">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Path Data="{StaticResource IconFlash}" Fill="White" Width="14" Height="14" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center" />
                         <TextBlock Text="Optimalkan Sekarang" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
@@ -48,65 +48,45 @@
 
             <!-- 3 Preset Profil Performa Utama -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,20" Padding="18,16">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                <StackPanel>
+                    <StackPanel Margin="0,0,0,12">
                         <TextBlock Text="Profil Performa Aktif" Style="{StaticResource CardTitleStyle}" />
                         <TextBlock Text="Pilih mode kerja sistem sesuai kebutuhan Anda." Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
                     </StackPanel>
 
-                    <Grid Grid.Column="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
+                    <UniformGrid Rows="1" Columns="3">
                         <!-- Profile 1: Daily Balance -->
-                        <RadioButton x:Name="RadioDaily" Grid.Column="0" Style="{StaticResource NavButton}" Height="54" Padding="12,8" Click="RadioProfile_Click" Tag="Daily">
+                        <RadioButton x:Name="RadioDaily" Style="{StaticResource NavButton}" Height="54" Padding="12,8" Margin="0,0,6,0" Click="RadioProfile_Click" Tag="Daily">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Seimbang (Harian)" FontWeight="SemiBold" FontSize="12.5" />
-                                <TextBlock Text="Hemat daya &amp; animasi normal" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="Seimbang (Harian)" FontWeight="SemiBold" FontSize="12.5" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                <TextBlock Text="Hemat daya &amp; animasi normal" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                             </StackPanel>
                         </RadioButton>
 
                         <!-- Profile 2: Productivity -->
-                        <RadioButton x:Name="RadioWork" Grid.Column="2" Style="{StaticResource NavButton}" Height="54" Padding="12,8" Click="RadioProfile_Click" Tag="Work">
+                        <RadioButton x:Name="RadioWork" Style="{StaticResource NavButton}" Height="54" Padding="12,8" Margin="3,0,3,0" Click="RadioProfile_Click" Tag="Work">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Kerja &amp; Produktif" FontWeight="SemiBold" FontSize="12.5" />
-                                <TextBlock Text="Auto-trim RAM &amp; mode hening" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="Kerja &amp; Produktif" FontWeight="SemiBold" FontSize="12.5" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                <TextBlock Text="Auto-trim RAM &amp; mode hening" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                             </StackPanel>
                         </RadioButton>
 
                         <!-- Profile 3: Gaming -->
-                        <RadioButton x:Name="RadioGaming" Grid.Column="4" Style="{StaticResource NavButton}" Height="54" Padding="12,8" Click="RadioProfile_Click" Tag="Gaming">
+                        <RadioButton x:Name="RadioGaming" Style="{StaticResource NavButton}" Height="54" Padding="12,8" Margin="6,0,0,0" Click="RadioProfile_Click" Tag="Gaming">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Gaming (Performa Maksimal)" FontWeight="SemiBold" FontSize="12.5" />
-                                <TextBlock Text="Skema daya &amp; performa tinggi" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="Gaming (Performa Maksimal)" FontWeight="SemiBold" FontSize="12.5" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                                <TextBlock Text="Skema daya &amp; performa tinggi" FontSize="11" Foreground="{StaticResource BrushTextSecondary}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                             </StackPanel>
                         </RadioButton>
-                    </Grid>
-                </Grid>
+                    </UniformGrid>
+                </StackPanel>
             </Border>
 
-            <!-- Metrics Grid: CPU, RAM, Storage -->
-            <Grid Margin="0,0,0,24">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="16" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="16" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <!-- Metrics Grid: CPU, RAM, Storage (wraps to 1 col on very small widths) -->
+            <UniformGrid x:Name="MetricsGrid" Rows="1" Columns="3" Margin="0,0,0,24">
 
                 <!-- CPU Card -->
-                <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,8,0">
                     <StackPanel>
                         <Grid Margin="0,0,0,12">
                             <TextBlock Text="Prosesor (CPU)" Style="{StaticResource CardTitleStyle}" />
@@ -133,7 +113,7 @@
                 </Border>
 
                 <!-- RAM Card -->
-                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,8,0">
                     <StackPanel>
                         <Grid Margin="0,0,0,12">
                             <TextBlock Text="Memori (RAM)" Style="{StaticResource CardTitleStyle}" />
@@ -160,7 +140,7 @@
                 </Border>
 
                 <!-- Storage Card -->
-                <Border Grid.Column="4" Style="{StaticResource CardStyle}">
+                <Border Style="{StaticResource CardStyle}" Margin="0,0,0,0">
                     <StackPanel>
                         <Grid Margin="0,0,0,12">
                             <TextBlock Text="Penyimpanan (C:)" Style="{StaticResource CardTitleStyle}" />
@@ -185,12 +165,21 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
-            </Grid>
+            </UniformGrid>
 
             <!-- System Overview Card -->
             <Border Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="Informasi Perangkat" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,16" />
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Informasi Perangkat" Style="{StaticResource SectionTitleStyle}" VerticalAlignment="Center" />
+                        <Border Grid.Column="1" x:Name="BorderHwTierBadge" Background="{StaticResource BrushAccentLight}" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtInfoHwTier" Text="TIER: MEMERIKSA..." FontWeight="Bold" FontSize="11" Foreground="{StaticResource BrushAccent}" />
+                        </Border>
+                    </Grid>
 
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -200,30 +189,30 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Col 1 -->
-                        <StackPanel Grid.Column="0">
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
                             <TextBlock Text="Sistem Operasi" Style="{StaticResource SecondaryTextStyle}" />
-                            <TextBlock x:Name="TxtInfoOs" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,12" />
+                            <TextBlock x:Name="TxtInfoOs" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,12" TextTrimming="CharacterEllipsis" />
 
                             <TextBlock Text="Nama Komputer" Style="{StaticResource SecondaryTextStyle}" />
-                            <TextBlock x:Name="TxtInfoComputer" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,0" />
+                            <TextBlock x:Name="TxtInfoComputer" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
 
                         <!-- Col 2 -->
-                        <StackPanel Grid.Column="1">
+                        <StackPanel Grid.Column="1" Margin="0,0,12,0">
                             <TextBlock Text="Versi Build" Style="{StaticResource SecondaryTextStyle}" />
-                            <TextBlock x:Name="TxtInfoBuild" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,12" />
+                            <TextBlock x:Name="TxtInfoBuild" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,12" TextTrimming="CharacterEllipsis" />
 
                             <TextBlock Text="Pengguna Aktif" Style="{StaticResource SecondaryTextStyle}" />
-                            <TextBlock x:Name="TxtInfoUser" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,0" />
+                            <TextBlock x:Name="TxtInfoUser" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
 
                         <!-- Col 3 -->
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Arsitektur" Style="{StaticResource SecondaryTextStyle}" />
-                            <TextBlock x:Name="TxtInfoArch" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,12" />
+                            <TextBlock x:Name="TxtInfoArch" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,12" TextTrimming="CharacterEllipsis" />
 
                             <TextBlock Text="Waktu Aktif (Uptime)" Style="{StaticResource SecondaryTextStyle}" />
-                            <TextBlock x:Name="TxtInfoUptime" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,0" />
+                            <TextBlock x:Name="TxtInfoUptime" Text="-" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>

@@ -22,8 +22,7 @@ public class SystemInfoService
         // 2. RAM Usage via GlobalMemoryStatusEx
         try
         {
-            var memStatus = new WindowsApi.MEMORYSTATUSEX();
-            if (WindowsApi.GlobalMemoryStatusEx(memStatus))
+            if (NativeMethods.TryGetMemoryStatus(out var memStatus))
             {
                 metrics.TotalRamGb = Math.Round((double)memStatus.ullTotalPhys / (1024 * 1024 * 1024), 2);
                 metrics.FreeRamGb = Math.Round((double)memStatus.ullAvailPhys / (1024 * 1024 * 1024), 2);
@@ -77,7 +76,7 @@ public class SystemInfoService
     {
         try
         {
-            if (!WindowsApi.GetSystemTimes(out var idleTime, out var kernelTime, out var userTime))
+            if (!NativeMethods.GetSystemTimes(out var idleTime, out var kernelTime, out var userTime))
                 return 0.0;
 
             if (_isFirstCpuSample)
